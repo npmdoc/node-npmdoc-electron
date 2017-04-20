@@ -135,15 +135,13 @@
             }
             // search modulePathList
             [
+                ['node_modules'],
                 modulePathList,
                 require('module').globalPaths
             ].some(function (modulePathList) {
                 modulePathList.some(function (modulePath) {
                     try {
-                        tmp = require('path').resolve(
-                            process.cwd(),
-                            modulePath + '/' + module
-                        );
+                        tmp = require('path').resolve(process.cwd(), modulePath + '/' + module);
                         result = require('fs').statSync(tmp).isDirectory() && tmp;
                         return result;
                     } catch (ignore) {
@@ -415,77 +413,6 @@ local.templateApidocHtml = '\
 </div>\n\
 </div>\n\
 ';
-
-local.templateApidocMd = '\
-{{#if header}} \
-{{header}} \
-{{#unless header}} \
-# api documentation for \
-{{#if env.npm_package_homepage}} \
-[{{env.npm_package_name}} (v{{env.npm_package_version}})]({{env.npm_package_homepage}}) \
-{{#unless env.npm_package_homepage}} \
-{{env.npm_package_name}} (v{{env.npm_package_version}}) \
-{{/if env.npm_package_homepage}} \
-\n\
-## {{env.npm_package_description}} \
-\n\
-{{/if header}} \
-\n\
-\n\
-\n\
-# <a name="apidoc.tableOfContents"></a>[table of contents](#apidoc.tableOfContents) \
-{{#each moduleList}} \
-\n\
-\n\
-#### [module {{name}}](#{{id}}) \
-    {{#each elementList}} \
-\n\
-1. \
-{{#if source}} \
-[{{name}} {{signature}}](#{{id}}) \
-{{#unless source}} \
-{{name}} \
-{{/if source}} \
-{{/each elementList}} \
-{{/each moduleList}} \
-{{#each moduleList}} \
-\n\
-\n\
-\n\
-\n\
-# <a name="{{id}}"></a>[module {{name}}](#{{id}}) \
-{{#each elementList}} \
-{{#if source}} \
-\n\
-\n\
-#### <a name="{{id}}"></a>[{{name}} {{signature}}](#{{id}}) \
-\n\
-- description and source-code \
-\n\
-```javascript \
-\n\
-{{source markdownCodeSafe}} \
-\n\
-``` \
-\n\
-- example usage \
-\n\
-```shell \
-\n\
-{{example markdownCodeSafe}} \
-\n\
-``` \
-{{/if source}} \
-{{/each elementList}} \
-{{/each moduleList}} \
-\n\
-\n\
-\n\
-\n\
-# misc \
-\n\
-- this document was created with [utility2](https://github.com/kaizhu256/node-utility2) \
-\n';
 /* jslint-ignore-end */
 
 
@@ -496,12 +423,15 @@ local.templateApidocMd = '\
         /*
          * this function will create the apidoc from options.dir
          */
-            var elementCreate, module, moduleMain, readExample, tmp, trimLeft;
+            var elementCreate, module, moduleMain, readExample, tmp, toString, trimLeft;
             elementCreate = function (module, prefix, key) {
             /*
              * this function will create the apidoc-element in the given module
              */
                 var element;
+                if (options.modeNoApidoc) {
+                    return element;
+                }
                 element = {};
                 element.moduleName = prefix.split('.');
                 // handle case where module is a function
@@ -519,19 +449,11 @@ local.templateApidocMd = '\
                     return element;
                 }
                 // init source
-                element.source = 'n/a';
-                // bug-workaround - catch and ignore error
-                // "Function.prototype.toString is not generic"
-                try {
-                    element.source = trimLeft(module[key].toString());
-                } catch (ignore) {
-                }
+                element.source = trimLeft(toString(module[key])) || 'n/a';
                 if (element.source.length > 4096) {
                     element.source = element.source.slice(0, 4096).trimRight() + ' ...';
                 }
-                element.source = (options.template === local.templateApidocHtml
-                    ? local.stringHtmlSafe(element.source)
-                    : element.source)
+                element.source = local.stringHtmlSafe(element.source)
                     .replace((/\([\S\s]*?\)/), function (match0) {
                         // init signature
                         element.signature = match0
@@ -550,15 +472,13 @@ local.templateApidocMd = '\
                     example.replace(
                         new RegExp('((?:\n.*?){8}\\.)(' + key + ')(\\((?:.*?\n){8})'),
                         function (match0, match1, match2, match3) {
-                            element.example = '...' + trimLeft(
-                                options.template === local.templateApidocHtml
-                                    ?  local.stringHtmlSafe(match1) +
-                                        '<span class="apidocCodeKeywordSpan">' +
-                                        local.stringHtmlSafe(match2) +
-                                        '</span>' +
-                                        local.stringHtmlSafe(match3)
-                                    : match0
-                            ).trimRight() + '\n...';
+                            // jslint-hack
+                            local.nop(match0);
+                            element.example = '...' + trimLeft(local.stringHtmlSafe(match1) +
+                                '<span class="apidocCodeKeywordSpan">' +
+                                local.stringHtmlSafe(match2) +
+                                '</span>' +
+                                local.stringHtmlSafe(match3)).trimRight() + '\n...';
                         }
                     );
                     return element.example;
@@ -574,6 +494,16 @@ local.templateApidocMd = '\
                     return ('\n\n\n\n\n\n\n\n' +
                         local.fs.readFileSync(local.path.resolve(options.dir, file), 'utf8') +
                         '\n\n\n\n\n\n\n\n').replace((/\r\n*/g), '\n');
+                } catch (errorCaught) {
+                    return '';
+                }
+            };
+            toString = function (value) {
+            /*
+             * this function will try to return the string form of the value
+             */
+                try {
+                    return String(value);
                 } catch (errorCaught) {
                     return '';
                 }
@@ -603,13 +533,29 @@ local.templateApidocMd = '\
             );
             local.objectSetDefault(options, {
                 env: {},
-                packageJson: JSON.parse(readExample('package.json'))
+                packageJson: JSON.parse(readExample('package.json')),
+                require: require
             });
             Object.keys(options.packageJson).forEach(function (key) {
-                if (key[0] === '_') {
+                tmp = options.packageJson[key];
+                // strip email from npmdoc documentation
+                // https://github.com/npmdoc/node-npmdoc-hpp/issues/1
+                if (tmp) {
+                    if (tmp.email) {
+                        delete tmp.email;
+                    }
+                    if (Array.isArray(tmp)) {
+                        tmp.forEach(function (element) {
+                            if (element && element.email) {
+                                delete element.email;
+                            }
+                        });
+                    }
+                }
+                if (key[0] === '_' || key === 'readme') {
                     delete options.packageJson[key];
-                } else if (typeof options.packageJson[key] === 'string') {
-                    options.env['npm_package_' + key] = options.packageJson[key];
+                } else if (typeof tmp === 'string') {
+                    options.env['npm_package_' + key] = tmp;
                 }
             });
             local.objectSetDefault(options, {
@@ -618,6 +564,7 @@ local.templateApidocMd = '\
                 exampleFileList: [],
                 exampleList: [],
                 html: '',
+                libFileList: [],
                 moduleDict: {},
                 moduleExtraDict: {},
                 template: local.templateApidocHtml
@@ -631,15 +578,46 @@ local.templateApidocMd = '\
                             (/^(?:readme)\b/i).test(file) ||
                             (/^(?:index|lib|test)\b.*\.js$/i).test(file);
                     })
-            ).map(readExample));
+            ).map(readExample))
+                .filter(function (element) {
+                    return element.trim();
+                })
+                .slice(0, 128);
             // init moduleMain
+            try {
+                console.error('apidocCreate - requiring ' + options.dir + ' ...');
+                moduleMain = {};
+                moduleMain = options.moduleDict[options.env.npm_package_name] ||
+                    options.require(options.dir);
+                console.error('apidocCreate - ... required ' + options.dir);
+            } catch (ignore) {
+            }
+            tmp = {};
+            // handle case where module is a function
+            if (typeof moduleMain === 'function') {
+                (function () {
+                    var text;
+                    text = toString(moduleMain);
+                    tmp = function () {
+                        return;
+                    };
+                    // coverage-hack
+                    tmp();
+                    Object.defineProperties(tmp, { toString: { get: function () {
+                        return function () {
+                            return text;
+                        };
+                    } } });
+                }());
+            }
+            // normalize moduleMain
             moduleMain = options.moduleDict[options.env.npm_package_name] =
-                options.moduleDict[options.env.npm_package_name] ||
-                require(options.dir + (process.env.npm_package_buildNpmdocMain || ''));
+                local.objectSetDefault(tmp, moduleMain);
             // init circularList - builtin
             Object.keys(process.binding('natives')).forEach(function (key) {
                 if (!(/\/|_linklist|sys/).test(key)) {
-                    options.blacklistDict[key] = options.blacklistDict[key] || require(key);
+                    options.blacklistDict[key] = options.blacklistDict[key] ||
+                        options.require(key);
                 }
             });
             // init circularList - blacklistDict
@@ -665,42 +643,76 @@ local.templateApidocMd = '\
             });
             // init moduleDict child
             local.apidocModuleDictAdd(options, options.moduleDict);
-            // init moduleDict lib
-            (function () {
-                // optimization - isolate try-catch block
-                try {
-                    options.libFileList = options.libFileList ||
-                        local.fs.readdirSync(options.dir + '/lib')
-                        .sort()
-                        .map(function (file) {
-                            return 'lib/' + file;
-                        });
-                } catch (ignore) {
-                }
-            }());
+            // init moduleExtraDict
             module = options.moduleExtraDict[options.env.npm_package_name] =
                 options.moduleExtraDict[options.env.npm_package_name] || {};
-            (options.libFileList || []).forEach(function (file) {
+            [1, 2, 3].forEach(function (depth) {
+                options.libFileList = options.libFileList.concat(
+                    // http://stackoverflow.com
+                    // /questions/4509624/how-to-limit-depth-for-recursive-file-list
+                    // find . -maxdepth 1 -mindepth 1 -name "*.js" -type f
+                    local.child_process.execSync('find "' + options.dir +
+                        '" -maxdepth ' + depth + ' -mindepth ' + depth +
+                        ' -name "*.js" -type f | sort | head -n 4096').toString()
+                        .split('\n')
+                        .map(function (file) {
+                            return file.replace(options.dir + '/', '');
+                        })
+                        .filter(function (file) {
+                            return !(/^(?:\.git|node_modules|tmp)\b/).test(file);
+                        })
+                );
+            });
+            options.libFileList.some(function (file) {
                 try {
-                    tmp = {
-                        module: require(local.path.resolve(options.dir, file)),
-                        name: local.path.basename(file)
-                            .replace((/\.[^.]*?$/), '')
-                            .replace((/\W/g), '_')
-                    };
-                    if (module[tmp.name] || options.circularList.indexOf(tmp.module) >= 0) {
+                    tmp = {};
+                    tmp.name = local.path.basename(file)
+                        .replace('lib.', '')
+                        .replace((/\.[^.]*?$/), '')
+                        .replace((/\W/g), '_');
+                    if (!tmp.name) {
+                        return;
+                    }
+                    [
+                        tmp.name,
+                        tmp.name.slice(0, 1).toUpperCase() + tmp.name.slice(1)
+                    ].some(function (name) {
+                        tmp.skip = local.path.extname(file) !== '.js' ||
+                            file.indexOf(options.packageJson.main) >= 0 ||
+                            new RegExp('(?:\\b|_)(?:archive|artifact|asset|' +
+                                'bower_components|build|' +
+                                'coverage|' +
+                                'doc|dist|' +
+                                'example|external|' +
+                                'fixture|' +
+                                'index|' +
+                                'log|' +
+                                'min|mock|' +
+                                'node_modules|' +
+                                'rollup|' +
+                                'test|tmp|' +
+                                'vendor)s{0,1}(?:\\b|_)').test(file.toLowerCase()) ||
+                            module[name];
+                        return tmp.skip;
+                    });
+                    if (tmp.skip) {
+                        return;
+                    }
+                    tmp.module = options.require(options.dir + '/' + file);
+                    if (options.circularList.indexOf(tmp.module) >= 0) {
                         return;
                     }
                     module[tmp.name] = tmp.module;
                     // update exampleList
                     options.exampleList.push(readExample(file));
-                } catch (ignore) {
+                    console.error('apidocCreate - ' + options.exampleList.length +
+                        '. added libFile ' + file);
+                } catch (errorCaught) {
+                    console.error(errorCaught);
                 }
+                return options.exampleList.length >= 256;
             });
             local.apidocModuleDictAdd(options, options.moduleExtraDict);
-            // normalize moduleMain
-            moduleMain = options.moduleDict[options.env.npm_package_name] =
-                local.objectSetDefault({}, moduleMain);
             Object.keys(options.moduleDict).forEach(function (key) {
                 if (key.indexOf(options.env.npm_package_name + '.') !== 0) {
                     return;
@@ -715,8 +727,11 @@ local.templateApidocMd = '\
                     module = options.moduleDict[prefix];
                     // handle case where module is a function
                     if (typeof module === 'function') {
-                        module[prefix.split('.').slice(-1)[0]] =
-                            module[prefix.split('.').slice(-1)[0]] || module;
+                        try {
+                            module[prefix.split('.').slice(-1)[0]] =
+                                module[prefix.split('.').slice(-1)[0]] || module;
+                        } catch (ignore) {
+                        }
                     }
                     return {
                         elementList: Object.keys(module)
@@ -759,11 +774,11 @@ local.templateApidocMd = '\
                         return;
                     }
                     Object.keys(moduleDict[prefix]).forEach(function (key) {
-                        if (!(/^\w[\w\-.]*?$/).test(key)) {
-                            return;
-                        }
-                        // bug-workaround - buggy electron accessors
+                        // bug-workaround - buggy electron getter / setter
                         try {
+                            if (!(/^\w[\w\-.]*?$/).test(key) || !moduleDict[prefix][key]) {
+                                return;
+                            }
                             tmp = element === 'prototype'
                                 ? {
                                     module: moduleDict[prefix][key].prototype,
@@ -785,6 +800,7 @@ local.templateApidocMd = '\
                                 tmp.module.prototype
                             ].some(function (dict) {
                                 return Object.keys(dict || {}).some(function (key) {
+                                    // bug-workaround - buggy electron getter / setter
                                     try {
                                         return typeof dict[key] === 'function';
                                     } catch (ignore) {
@@ -811,6 +827,7 @@ local.templateApidocMd = '\
     /* istanbul ignore next */
     case 'node':
         // require modules
+        local.child_process = require('child_process');
         local.fs = require('fs');
         local.path = require('path');
         // run the cli
@@ -820,10 +837,7 @@ local.templateApidocMd = '\
         // jslint files
         process.stdout.write(local.apidocCreate({
             dir: process.argv[2],
-            modulePathList: module.paths,
-            template: process.argv[3] === '--markdown'
-                ? local.templateApidocMd
-                : local.templateApidocHtml
+            modulePathList: module.paths
         }));
         break;
     }
@@ -991,6 +1005,22 @@ local.templateApidocMd = '\
                 : element, replacer, space);
         };
 
+        local.listShuffle = function (list) {
+        /*
+         * https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
+         * this function will inplace shuffle the list, via fisher-yates algorithm
+         */
+            var ii, random, swap;
+            for (ii = list.length - 1; ii > 0; ii -= 1) {
+                // coerce to finite integer
+                random = (Math.random() * (ii + 1)) | 0;
+                swap = list[ii];
+                list[ii] = list[random];
+                list[random] = swap;
+            }
+            return list;
+        };
+
         local.nop = function () {
         /*
          * this function will do nothing
@@ -1058,7 +1088,7 @@ local.templateApidocMd = '\
          * this function will if error exists, then print error.stack to stderr
          */
             if (error && !local.global.__coverage__) {
-                console.error(error.stack);
+                console.error(error);
             }
         };
 
@@ -1080,7 +1110,7 @@ local.templateApidocMd = '\
             };
         };
 
-        local.onParallel = function (onError, onEach) {
+        local.onParallel = function (onError, onEach, onRetry) {
         /*
          * this function will create a function that will
          * 1. run async tasks in parallel
@@ -1089,7 +1119,11 @@ local.templateApidocMd = '\
             var onParallel;
             onError = local.onErrorWithStack(onError);
             onEach = onEach || local.nop;
-            onParallel = function (error) {
+            onRetry = onRetry || local.nop;
+            onParallel = function (error, data) {
+                if (onRetry(error, data)) {
+                    return;
+                }
                 // decrement counter
                 onParallel.counter -= 1;
                 // validate counter
@@ -1101,12 +1135,12 @@ local.templateApidocMd = '\
                 // handle error
                 if (error) {
                     onParallel.error = error;
-                    // ensure counter < 0
-                    onParallel.counter = -1;
+                    // ensure counter <= 0
+                    onParallel.counter = -Math.abs(onParallel.counter);
                 }
                 // call onError when done
                 if (onParallel.counter <= 0) {
-                    onError(error);
+                    onError(error, data);
                     return;
                 }
                 onEach();
@@ -1119,7 +1153,7 @@ local.templateApidocMd = '\
 
         local.setTimeoutOnError = function (onError, error, data) {
         /*
-         * this function will asynchronously call onError
+         * this function will async-call onError
          */
             if (typeof onError === 'function') {
                 setTimeout(function () {
@@ -1439,44 +1473,91 @@ local.templateApidocMd = '\
             this.dbRowList = [];
             this.isDirty = null;
             this.idIndexList = [{ name: '_id', dict: {} }];
-            this.ttl = 0;
-            this.ttlLast = 0;
+            this.onSaveList = [];
+            this.sizeLimit = options.sizeLimit || 0;
         };
 
         local._DbTable.prototype._cleanup = function () {
         /*
          * this function will cleanup soft-deleted records from the dbTable
          */
-            var dbRow, ii, list, ttl;
-            ttl = Date.now();
-            if (!(this.isDirty ||
-                  // cleanup ttl every minute
-                  (this.ttl && this.ttlLast + this.ttl < ttl))) {
+            var dbRow, ii, list;
+            if (!this.isDirty && this.dbRowList.length <= this.sizeLimit) {
                 return;
             }
             this.isDirty = null;
-            this.ttlLast = ttl;
             // cleanup dbRowList
             list = this.dbRowList;
             this.dbRowList = [];
             // optimization - for-loop
             for (ii = 0; ii < list.length; ii += 1) {
                 dbRow = list[ii];
-                // cleanup ttl
-                if (this.ttl && dbRow.$meta.ttl < ttl) {
-                    this._crudRemoveOneById(dbRow);
                 // cleanup isRemoved
-                } else if (!dbRow.$meta.isRemoved) {
+                if (!dbRow.$meta.isRemoved) {
                     this.dbRowList.push(dbRow);
                 }
             }
+            if (this.sizeLimit && this.dbRowList.length >= 1.5 * this.sizeLimit) {
+                this.dbRowList = this._crudGetManyByQuery(
+                    {},
+                    this.sortDefault,
+                    0,
+                    this.sizeLimit
+                );
+            }
         };
 
-        local._DbTable.prototype._crudGetManyByQuery = function (query) {
+        local._DbTable.prototype._crudGetManyByQuery = function (
+            query,
+            sort,
+            skip,
+            limit,
+            shuffle
+        ) {
         /*
-         * this function will get the dbRow's in the dbTable with the given query
+         * this function will get the dbRow's in the dbTable,
+         * with the given query, sort, skip, and limit
          */
-            return local.dbRowListGetManyByQuery(this.dbRowList, local.normalizeDict(query));
+            var ii, result;
+            result = this.dbRowList;
+            // get by query
+            if (result.length && query && Object.keys(query).length) {
+                result = local.dbRowListGetManyByQuery(this.dbRowList, query);
+            }
+            // sort
+            local.normalizeList(sort).forEach(function (element) {
+                // bug-workaround - v8 does not have stable-sort
+                // optimization - for-loop
+                for (ii = 0; ii < result.length; ii += 1) {
+                    result[ii].$meta.ii = ii;
+                }
+                if (element.isDescending) {
+                    result.sort(function (aa, bb) {
+                        return -local.sortCompare(
+                            local.dbRowGetItem(aa, element.fieldName),
+                            local.dbRowGetItem(bb, element.fieldName),
+                            aa.$meta.ii,
+                            bb.$meta.ii
+                        );
+                    });
+                } else {
+                    result.sort(function (aa, bb) {
+                        return local.sortCompare(
+                            local.dbRowGetItem(aa, element.fieldName),
+                            local.dbRowGetItem(bb, element.fieldName),
+                            aa.$meta.ii,
+                            bb.$meta.ii
+                        );
+                    });
+                }
+            });
+            // skip
+            result = result.slice(skip || 0);
+            // shuffle
+            ((shuffle && local.listShuffle) || local.nop)(result);
+            // limit
+            result = result.slice(0, limit || Infinity);
+            return result;
         };
 
         local._DbTable.prototype._crudGetOneById = function (idDict) {
@@ -1526,8 +1607,7 @@ local.templateApidocMd = '\
                 // recurse
                 self._crudRemoveOneById(result, circularList);
             });
-            // persist
-            this._persist();
+            self.save();
             return result;
         };
 
@@ -1560,14 +1640,16 @@ local.templateApidocMd = '\
             // update timestamp
             timeNow = new Date().toISOString();
             dbRow._timeCreated = dbRow._timeCreated || timeNow;
-            dbRow._timeUpdated = timeNow;
+            if (!local.modeImport) {
+                dbRow._timeUpdated = timeNow;
+            }
             // normalize
             normalize(dbRow);
             dbRow = local.jsonCopy(dbRow);
             // remove existing dbRow
             existing = this._crudRemoveOneById(dbRow) || dbRow;
             // init meta
-            dbRow.$meta = { isRemoved: null, ttl: this.ttl + Date.now() };
+            dbRow.$meta = { isRemoved: null };
             this.idIndexList.forEach(function (idIndex) {
                 // auto-set id
                 id = local.dbRowSetId(existing, idIndex);
@@ -1578,8 +1660,7 @@ local.templateApidocMd = '\
             });
             // update dbRowList
             this.dbRowList.push(dbRow);
-            // persist
-            this._persist();
+            this.save();
             return dbRow;
         };
 
@@ -1611,31 +1692,6 @@ local.templateApidocMd = '\
             // replace dbRow
             result = this._crudSetOneById(result);
             return result;
-        };
-
-        local._DbTable.prototype._persist = function () {
-        /*
-         * this function will persist the dbTable to storage
-         */
-            var self;
-            self = this;
-            // throttle storage-writes to once every 1000 ms
-            if (self.timerPersist) {
-                return;
-            }
-            self.timerPersist = setTimeout(function () {
-                if (self.timerPersist) {
-                    self.timerPersist = null;
-                    self._save();
-                }
-            }, 1000);
-        };
-
-        local._DbTable.prototype._save = function (onError) {
-        /*
-         * this function will save the dbTable to storage
-         */
-            local.storageSetItem('dbTable.' + this.name, this.export(), onError);
         };
 
         local._DbTable.prototype.crudCountAll = function (onError) {
@@ -1676,36 +1732,16 @@ local.templateApidocMd = '\
         /*
          * this function will get the dbRow's in the dbTable with the given options.query
          */
-            var result;
             this._cleanup();
             options = local.normalizeDict(options);
-            // get dbRow's with the given options.query
-            result = this._crudGetManyByQuery(options.query);
-            // sort dbRow's with the given options.sort
-            local.normalizeList(options.sort).forEach(function (element) {
-                if (element.isDescending) {
-                    result.sort(function (aa, bb) {
-                        return -local.sortCompare(
-                            local.dbRowGetItem(aa, element.fieldName),
-                            local.dbRowGetItem(bb, element.fieldName)
-                        );
-                    });
-                } else {
-                    result.sort(function (aa, bb) {
-                        return local.sortCompare(
-                            local.dbRowGetItem(aa, element.fieldName),
-                            local.dbRowGetItem(bb, element.fieldName)
-                        );
-                    });
-                }
-            });
-            // skip and limit dbRow's with the given options.skip and options.limit
-            result = result.slice(
-                options.skip || 0,
-                (options.skip || 0) + (options.limit || Infinity)
-            );
             return local.setTimeoutOnError(onError, null, local.dbRowProject(
-                result,
+                this._crudGetManyByQuery(
+                    options.query,
+                    options.sort || this.sortDefault,
+                    options.skip,
+                    options.limit,
+                    options.shuffle
+                ),
                 options.fieldList
             ));
         };
@@ -1862,10 +1898,13 @@ local.templateApidocMd = '\
          * this function will drop the dbTable
          */
             console.error('dropping dbTable ' + this.name + ' ...');
+            // cancel pending save
+            this.timerSave = null;
+            while (this.onSaveList.length) {
+                this.onSaveList.shift()();
+            }
             // reset dbTable
             local._DbTable.call(this, this);
-            // cancel pending persist
-            this.timerPersist = null;
             // clear persistence
             local.storageRemoveItem('dbTable.' + this.name, onError);
         };
@@ -1874,22 +1913,21 @@ local.templateApidocMd = '\
         /*
          * this function will export the db
          */
-            var ii, result, self;
+            var result, self;
             this._cleanup();
             self = this;
             result = '';
-            result += self.name + ' ttlSet ' + self.ttl + '\n';
             self.idIndexList.forEach(function (idIndex) {
                 result += self.name + ' idIndexCreate ' + JSON.stringify({
                     isInteger: idIndex.isInteger,
                     name: idIndex.name
                 }) + '\n';
             });
-            // optimization - for-loop
-            for (ii = 0; ii < self.dbRowList.length; ii += 1) {
-                result += self.name + ' dbRowSet ' +
-                    JSON.stringify(local.dbRowProject(self.dbRowList[ii])) + '\n';
-            }
+            result += self.name + ' sizeLimit ' + self.sizeLimit + '\n';
+            result += self.name + ' sortDefault ' + JSON.stringify(self.sortDefault) + '\n';
+            self.crudGetManyByQuery({}).forEach(function (dbRow) {
+                result += self.name + ' dbRowSet ' + JSON.stringify(dbRow) + '\n';
+            });
             return local.setTimeoutOnError(onError, null, result.trim());
         };
 
@@ -1922,8 +1960,7 @@ local.templateApidocMd = '\
                     idIndex.dict[local.dbRowSetId(dbRow, idIndex)] = dbRow;
                 }
             }
-            // persist
-            this._persist();
+            this.save();
             return local.setTimeoutOnError(onError);
         };
 
@@ -1937,27 +1974,33 @@ local.templateApidocMd = '\
             this.idIndexList = this.idIndexList.filter(function (idIndex) {
                 return idIndex.name !== name || idIndex.name === '_id';
             });
-            // persist
-            this._persist();
+            this.save();
             return local.setTimeoutOnError(onError);
         };
 
-        local._DbTable.prototype.ttlSet = function (ttl, onError) {
+        local._DbTable.prototype.save = function (onError) {
         /*
-         * this function will set the ttl in milliseconds
+         * this function will save the dbTable to storage
          */
-            var ii;
-            // set ttl in milliseconds
-            this.ttl = ttl;
-            // update dbRowList
-            ttl += Date.now();
-            // optimization - for-loop
-            for (ii = 0; ii < this.dbRowList.length; ii += 1) {
-                this.dbRowList[ii].$meta.ttl = ttl;
+            var self;
+            self = this;
+            if (local.modeImport) {
+                return;
             }
-            // persist
-            this._persist();
-            return local.setTimeoutOnError(onError);
+            if (onError) {
+                self.onSaveList.push(onError);
+            }
+            // throttle storage-writes to once every 1000 ms
+            self.timerSave = self.timerSave || setTimeout(function () {
+                self.timerSave = null;
+                local.storageSetItem('dbTable.' + self.name + '.json', self.export(), function (
+                    error
+                ) {
+                    while (self.onSaveList.length) {
+                        self.onSaveList.shift()(error);
+                    }
+                });
+            }, 1000);
         };
 
         local.dbCrudRemoveAll = function (onError) {
@@ -2012,7 +2055,11 @@ local.templateApidocMd = '\
          * this function will import the serialized text into the db
          */
             var dbTable;
-            text.replace((/^(\w\S*?) (\S+?) (\S.+?)$/gm), function (
+            local.modeImport = true;
+            setTimeout(function () {
+                local.modeImport = null;
+            });
+            text.replace((/^(\w\S*?) (\S+?) (\S.*?)$/gm), function (
                 match0,
                 match1,
                 match2,
@@ -2029,14 +2076,18 @@ local.templateApidocMd = '\
                     dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
                     dbTable.idIndexCreate(JSON.parse(match3));
                     break;
-                case 'ttlSet':
+                case 'sizeLimit':
                     dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
-                    dbTable.ttlSet(JSON.parse(match3));
+                    dbTable.sizeLimit = JSON.parse(match3);
+                    break;
+                case 'sortDefault':
+                    dbTable = local.dbTableCreateOne({ isLoaded: true, name: match1 });
                     break;
                 default:
                     local.onErrorDefault(new Error('dbImport - invalid operation - ' + match0));
                 }
             });
+            local.modeImport = null;
             return local.setTimeoutOnError(onError);
         };
 
@@ -2084,7 +2135,7 @@ local.templateApidocMd = '\
                 : value;
         };
 
-        local.dbRowListGetManyByOperator = function (dbRowList, fieldName, operator, bb) {
+        local.dbRowListGetManyByOperator = function (dbRowList, fieldName, operator, bb, not) {
         /*
          * this function will get the dbRow's in dbRowList with the given operator
          */
@@ -2191,7 +2242,7 @@ local.templateApidocMd = '\
                 }
                 // optimization - for-loop
                 for (jj = fieldValue.length - 1; jj >= 0; jj -= 1) {
-                    if (test(fieldValue[jj], bb, typeof fieldValue[jj], typeof2)) {
+                    if (not ^ test(fieldValue[jj], bb, typeof fieldValue[jj], typeof2)) {
                         result.push(dbRowList[ii]);
                         break;
                     }
@@ -2200,22 +2251,29 @@ local.templateApidocMd = '\
             return result;
         };
 
-        local.dbRowListGetManyByQuery = function (dbRowList, query, fieldName) {
+        local.dbRowListGetManyByQuery = function (dbRowList, query, fieldName, not) {
         /*
          * this function will get the dbRow's in dbRowList with the given query
          */
             var bb, dbRowDict, result;
+            // optimization - convert to boolean
+            not = !!not;
             result = dbRowList;
-            if (!result.length) {
-                return result;
-            }
             if (!(query && typeof query === 'object')) {
-                result = local.dbRowListGetManyByOperator(result, fieldName, '$eq', query);
+                result = local.dbRowListGetManyByOperator(result, fieldName, '$eq', query, not);
                 return result;
             }
             Object.keys(query).some(function (key) {
                 bb = query[key];
-                if (key === '$or' && Array.isArray(bb)) {
+                switch (key) {
+                case '$not':
+                    key = fieldName;
+                    not = !not;
+                    break;
+                case '$or':
+                    if (!Array.isArray(bb)) {
+                        break;
+                    }
                     dbRowDict = {};
                     bb.forEach(function (query) {
                         // recurse
@@ -2229,11 +2287,11 @@ local.templateApidocMd = '\
                     return !result.length;
                 }
                 if (key[0] === '$') {
-                    result = local.dbRowListGetManyByOperator(result, fieldName, key, bb);
+                    result = local.dbRowListGetManyByOperator(result, fieldName, key, bb, not);
                     return !result.length;
                 }
                 // recurse
-                result = local.dbRowListGetManyByQuery(result, bb, key);
+                result = local.dbRowListGetManyByQuery(result, bb, key, not);
                 return !result.length;
             });
             return result;
@@ -2297,7 +2355,7 @@ local.templateApidocMd = '\
             onParallel.counter += 1;
             Object.keys(local.dbTableDict).forEach(function (key) {
                 onParallel.counter += 1;
-                local.dbTableDict[key]._save(onParallel);
+                local.dbTableDict[key].save(onParallel);
             });
             onParallel();
         };
@@ -2327,6 +2385,9 @@ local.templateApidocMd = '\
             // register dbTable
             self = local.dbTableDict[options.name] =
                 local.dbTableDict[options.name] || new local._DbTable(options);
+            self.sortDefault = options.sortDefault ||
+                self.sortDefault ||
+                [{ fieldName: '_timeUpdated', isDescending: true }];
             // remove idIndex
             local.normalizeList(options.idIndexRemoveList).forEach(function (index) {
                 self.idIndexRemove(index);
@@ -2339,7 +2400,7 @@ local.templateApidocMd = '\
             self.crudSetManyById(options.dbRowList);
             self.isLoaded = self.isLoaded || options.isLoaded;
             if (!self.isLoaded) {
-                local.storageGetItem('dbTable.' + self.name, function (error, data) {
+                local.storageGetItem('dbTable.' + self.name + '.json', function (error, data) {
                     // validate no error occurred
                     console.assert(!error, error);
                     if (!self.isLoaded) {
@@ -2355,7 +2416,7 @@ local.templateApidocMd = '\
 
         local.dbTableDict = {};
 
-        local.sortCompare = function (aa, bb) {
+        local.sortCompare = function (aa, bb, ii, jj) {
         /*
          * this function will compare aa vs bb and return:
          * -1 if aa < bb
@@ -2366,7 +2427,9 @@ local.templateApidocMd = '\
          */
             var typeof1, typeof2;
             if (aa === bb) {
-                return 0;
+                return ii < jj
+                    ? -1
+                    : 1;
             }
             if (aa === null) {
                 return -1;
@@ -2596,7 +2659,7 @@ local.templateApidocMd = '\
             return options;
         };
 
-        local.onParallel = function (onError, onEach) {
+        local.onParallel = function (onError, onEach, onRetry) {
         /*
          * this function will create a function that will
          * 1. run async tasks in parallel
@@ -2605,7 +2668,11 @@ local.templateApidocMd = '\
             var onParallel;
             onError = local.onErrorWithStack(onError);
             onEach = onEach || local.nop;
-            onParallel = function (error) {
+            onRetry = onRetry || local.nop;
+            onParallel = function (error, data) {
+                if (onRetry(error, data)) {
+                    return;
+                }
                 // decrement counter
                 onParallel.counter -= 1;
                 // validate counter
@@ -2617,12 +2684,12 @@ local.templateApidocMd = '\
                 // handle error
                 if (error) {
                     onParallel.error = error;
-                    // ensure counter < 0
-                    onParallel.counter = -1;
+                    // ensure counter <= 0
+                    onParallel.counter = -Math.abs(onParallel.counter);
                 }
                 // call onError when done
                 if (onParallel.counter <= 0) {
-                    onError(error);
+                    onError(error, data);
                     return;
                 }
                 onEach();
@@ -2631,6 +2698,59 @@ local.templateApidocMd = '\
             onParallel.counter = 0;
             // return callback
             return onParallel;
+        };
+
+        local.onParallelList = function (options, onEach, onError) {
+        /*
+         * this function will
+         * 1. async-run onEach in parallel,
+         *    with the given options.rateLimit and options.retryLimit
+         * 2. call onError when done
+         */
+            var ii, onEach2, onParallel;
+            onEach2 = function () {
+                while (ii + 1 < options.list.length && onParallel.counter < options.rateLimit) {
+                    ii += 1;
+                    onParallel.ii += 1;
+                    onParallel.remaining -= 1;
+                    onEach({
+                        element: options.list[ii],
+                        ii: ii,
+                        list: options.list,
+                        retry: 0
+                    }, onParallel);
+                }
+            };
+            onParallel = local.onParallel(onError, onEach2, function (error, data) {
+                if (error && data && data.retry < options.retryLimit) {
+                    local.onErrorDefault(error);
+                    data.retry += 1;
+                    setTimeout(function () {
+                        onParallel.counter -= 1;
+                        onEach(data, onParallel);
+                    }, 1000);
+                    return true;
+                }
+            });
+            onParallel.counter += 1;
+            ii = -1;
+            onParallel.ii = -1;
+            onParallel.remaining = options.list.length;
+            options.rateLimit = Number(options.rateLimit) || 4;
+            options.rateLimit = Math.max(options.rateLimit, 3);
+            options.retryLimit = Number(options.retryLimit) || 2;
+            onEach2();
+            onParallel();
+        };
+
+        local.onReadyAfter = function (onError) {
+        /*
+         * this function will call onError when onReadyBefore.counter === 0
+         */
+            local.onReadyBefore.counter += 1;
+            local.taskCreate({ key: 'utility2.onReadyAfter' }, null, onError);
+            local.onResetAfter(local.onReadyBefore);
+            return onError;
         };
     }());
     switch (local.modeJs) {
@@ -2644,7 +2764,6 @@ local.templateApidocMd = '\
          * this function will delete the github file
          * https://developer.github.com/v3/repos/contents/#delete-a-file
          */
-            var onParallel;
             options = { message: options.message, url: options.url };
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
@@ -2664,17 +2783,14 @@ local.templateApidocMd = '\
                         return;
                     }
                     // delete tree
-                    onParallel = local.onParallel(options.onNext);
-                    onParallel.counter += 1;
-                    data.forEach(function (element) {
+                    local.onParallelList({ list: data }, function (data, onParallel) {
                         onParallel.counter += 1;
                         // recurse
                         local.contentDelete({
                             message: options.message,
-                            url: element.url
+                            url: data.element.url
                         }, onParallel);
-                    });
-                    onParallel();
+                    }, options.onNext);
                     break;
                 default:
                     onError();
@@ -2835,7 +2951,7 @@ local.templateApidocMd = '\
                     return match0;
                 });
             if (options.url.indexOf('https://api.github.com/repos/') !== 0) {
-                options.onError2(new Error('invalid url ' + options.url));
+                onError(new Error('invalid url ' + options.url));
                 return;
             }
             if (options.method !== 'GET') {
@@ -2901,18 +3017,14 @@ local.templateApidocMd = '\
          * this function will touch options.urlList in parallel
          * https://developer.github.com/v3/repos/contents/#update-a-file
          */
-            var onParallel;
-            onParallel = local.onParallel(onError);
-            onParallel.counter += 1;
-            options.urlList.forEach(function (url) {
+            local.onParallelList({ list: options.urlList }, function (data, onParallel) {
                 onParallel.counter += 1;
                 local.contentTouch({
                     message: options.message,
                     modeErrorIgnore: true,
-                    url: url
+                    url: data.element
                 }, onParallel);
-            });
-            onParallel();
+            }, onError);
         };
         break;
     }
@@ -5462,8 +5574,10 @@ local.templateCoverageBadgeSvg =
                 local._moduleExtensionsJs = local.module._extensions['.js'];
                 local.module._extensions['.js'] = function (module, file) {
                     if (typeof file === 'string' &&
-                            file.indexOf(process.cwd()) === 0 &&
-                            file.indexOf(process.cwd() + '/node_modules/') !== 0) {
+                            (file.indexOf(process.env.npm_config_mode_coverage_dir) === 0 || (
+                                file.indexOf(process.cwd()) === 0 &&
+                                file.indexOf(process.cwd() + '/node_modules/') !== 0
+                            ))) {
                         module._compile(local.instrumentInPackage(
                             local._fs.readFileSync(file, 'utf8'),
                             file
@@ -9634,7 +9748,7 @@ instruction\n\
                     /*jslint evil: true*/\n\
                     eval(document.querySelector(\'#inputTextareaEval1\').value);\n\
                 } catch (errorCaught) {\n\
-                    console.error(errorCaught.stack);\n\
+                    console.error(errorCaught);\n\
                 }\n\
             }\n\
         };\n\
@@ -9691,9 +9805,9 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') +
                 local.assetsDict[\'/assets.index.template.html\'],\n\
                 {\n\
                     env: local.objectSetDefault(local.env, {\n\
-                        npm_package_description: \'example module\',\n\
-                        npm_package_name: \'example\',\n\
-                        npm_package_nameAlias: \'example\',\n\
+                        npm_package_description: \'the greatest app in the world!\',\n\
+                        npm_package_name: \'my-app\',\n\
+                        npm_package_nameAlias: \'my_app\',\n\
                         npm_package_version: \'0.0.1\'\n\
                     })\n\
                 }\n\
@@ -9705,11 +9819,11 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') +
                     String(match0);\n\
                     switch (match1) {\n\
                     case \'npm_package_description\':\n\
-                        return \'example module\';\n\
+                        return \'the greatest app in the world!\';\n\
                     case \'npm_package_name\':\n\
-                        return \'example\';\n\
+                        return \'my-app\';\n\
                     case \'npm_package_nameAlias\':\n\
-                        return \'example\';\n\
+                        return \'my_app\';\n\
                     case \'npm_package_version\':\n\
                         return \'0.0.1\';\n\
                     }\n\
@@ -9722,14 +9836,15 @@ local.assetsDict['/assets.index.template.html'].replace((/\n/g), '\\n\\\n') +
         local.assetsDict[\'/assets.example.js\'] =\n\
             local.assetsDict[\'/assets.example.js\'] ||\n\
             local.fs.readFileSync(__filename, \'utf8\');\n\
+        // bug-workaround - long $npm_package_buildCustomOrg\n\
+        /* jslint-ignore-begin */\n\
         local.assetsDict[\'/assets.jslint.rollup.js\'] =\n\
             local.assetsDict[\'/assets.jslint.rollup.js\'] ||\n\
             local.fs.readFileSync(\n\
-                // npmdoc-hack\n\
-                local.jslint.__dirname +\n\
-                    \'/lib.jslint.js\',\n\
+                local.jslint.__dirname + \'/lib.jslint.js\',\n\
                 \'utf8\'\n\
             ).replace((/^#!/), \'//\');\n\
+        /* jslint-ignore-end */\n\
         local.assetsDict[\'/favicon.ico\'] = local.assetsDict[\'/favicon.ico\'] || \'\';\n\
         // if $npm_config_timeout_exit exists,\n\
         // then exit this process after $npm_config_timeout_exit ms\n\
@@ -9818,13 +9933,15 @@ local.assetsDict['/assets.lib.template.js'] = '\
 
 local.assetsDict['/assets.readme.template.md'] = '\
 # jslint-lite\n\
-example module\n\
+the greatest app in the world!\n\
 \n\
 [![travis-ci.org build-status](https://api.travis-ci.org/kaizhu256/node-jslint-lite.svg)](https://travis-ci.org/kaizhu256/node-jslint-lite) [![istanbul-coverage](https://kaizhu256.github.io/node-jslint-lite/build/coverage.badge.svg)](https://kaizhu256.github.io/node-jslint-lite/build/coverage.html/index.html)\n\
 \n\
 [![NPM](https://nodei.co/npm/jslint-lite.png?downloads=true)](https://www.npmjs.com/package/jslint-lite)\n\
 \n\
-[![package-listing](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.npmPackageListing.svg)](https://github.com/kaizhu256/node-jslint-lite)\n\
+[![npmPackageListing](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.npmPackageListing.svg)](https://github.com/kaizhu256/node-jslint-lite)\n\
+\n\
+![npmPackageDependencyTree](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.npmPackageDependencyTree.svg)\n\
 \n\
 \n\
 \n\
@@ -9836,7 +9953,7 @@ example module\n\
 # live demo\n\
 - [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html)\n\
 \n\
-[![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.deployGithub.browser._2Fnode-jslint-lite_2Fbuild_2Fapp_2Findex.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html)\n\
+[![github.com test-server](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.deployGithub.browser.%252Fnode-jslint-lite%252Fbuild%252Fapp%252Findex.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/app/index.html)\n\
 \n\
 \n\
 \n\
@@ -9844,12 +9961,12 @@ example module\n\
 #### apidoc\n\
 - [https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html)\n\
 \n\
-[![apidoc](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.buildApidoc.browser._2Fhome_2Ftravis_2Fbuild_2Fkaizhu256_2Fnode-jslint-lite_2Ftmp_2Fbuild_2Fapidoc.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html)\n\
+[![apidoc](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/apidoc.html)\n\
 \n\
 #### todo\n\
 - none\n\
 \n\
-#### change since xxxxxxxx\n\
+#### changelog for v0.0.1\n\
 - none\n\
 \n\
 #### this package requires\n\
@@ -9884,17 +10001,17 @@ example module\n\
 \n\
 \n\
 # quickstart web example\n\
-![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleJs.browser..png)\n\
+![screenCapture](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.testExampleJs.browser.%252F.png)\n\
 \n\
 #### to run this example, follow the instruction in the script below\n\
 - [example.js](https://kaizhu256.github.io/node-jslint-lite/build..beta..travis-ci.org/example.js)\n\
 ```javascript\n' + local.assetsDict['/assets.example.template.js'] + '```\n\
 \n\
 #### output from browser\n\
-![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleJs.browser..png)\n\
+![screenCapture](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.testExampleJs.browser.%252F.png)\n\
 \n\
 #### output from shell\n\
-![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.testExampleJs.svg)\n\
+![screenCapture](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.testExampleJs.svg)\n\
 \n\
 \n\
 \n\
@@ -9902,7 +10019,7 @@ example module\n\
 ```json\n\
 {\n\
     "author": "kai zhu <kaizhu256@gmail.com>",\n\
-    "description": "example module",\n\
+    "description": "the greatest app in the world!",\n\
     "devDependencies": {\n\
         "electron-lite": "kaizhu256/node-electron-lite#alpha",\n\
         "utility2": "kaizhu256/node-utility2#alpha"\n\
@@ -9926,10 +10043,10 @@ example module\n\
     "scripts": {\n\
         "build-ci": "utility2 shReadmeTest build_ci.sh",\n\
         "env": "env",\n\
-        "heroku-postbuild": "(set -e; npm install \\\"kaizhu256/node-utility2#alpha\\\"; utility2 shDeployHeroku)",\n\
-        "postinstall": "if [ -f npm_scripts.sh ]; then ./npm_scripts.sh postinstall; fi",\n\
-        "start": "(set -e; export PORT=${PORT:-8080}; utility2 start test.js)",\n\
-        "test": "(set -e; export PORT=$(utility2 shServerPortRandom); utility2 test test.js)"\n\
+        "heroku-postbuild": "npm install \\\"kaizhu256/node-utility2#alpha\\\" && utility2 shDeployHeroku",\n\
+        "postinstall": "[ ! -f npm_scripts.sh ] || ./npm_scripts.sh postinstall",\n\
+        "start": "PORT=${PORT:-8080} utility2 start test.js",\n\
+        "test": "PORT=$(utility2 shServerPortRandom) utility2 test test.js"\n\
     },\n\
     "version": "0.0.1"\n\
 }\n\
@@ -9938,7 +10055,7 @@ example module\n\
 \n\
 \n\
 # changelog of last 50 commits\n\
-[![screen-capture](https://kaizhu256.github.io/node-jslint-lite/build/screen-capture.gitLog.svg)](https://github.com/kaizhu256/node-jslint-lite/commits)\n\
+[![screenCapture](https://kaizhu256.github.io/node-jslint-lite/build/screenCapture.gitLog.svg)](https://github.com/kaizhu256/node-jslint-lite/commits)\n\
 \n\
 \n\
 \n\
@@ -9951,7 +10068,7 @@ example module\n\
 \n\
 shBuildCiPost() {(set -e\n\
     shDeployGithub\n\
-    shDeployHeroku\n\
+    # shDeployHeroku\n\
     shReadmeBuildLinkVerify\n\
 )}\n\
 \n\
@@ -9970,6 +10087,134 @@ shBuildCi\n\
 \n\
 # misc\n\
 - this package was created with [utility2](https://github.com/kaizhu256/node-utility2)\n\
+';
+
+
+
+local.assetsDict['/assets.readmeCustomOrg.npmdoc.template.md'] = '\
+# npmdoc-{{env.npm_package_name}} \
+\n\
+\n\
+#### api documentation for \
+{{#if env.npm_package_homepage}} \
+[{{env.npm_package_name}} (v{{env.npm_package_version}})]({{env.npm_package_homepage}}) \
+{{#unless env.npm_package_homepage}} \
+{{env.npm_package_name}} (v{{env.npm_package_version}}) \
+{{/if env.npm_package_homepage}} \
+[![npm package](https://img.shields.io/npm/v/npmdoc-{{env.npm_package_name}}.svg?style=flat-square)](https://www.npmjs.org/package/npmdoc-{{env.npm_package_name}}) \
+[![travis-ci.org build-status](https://api.travis-ci.org/npmdoc/node-npmdoc-{{env.npm_package_name}}.svg)](https://travis-ci.org/npmdoc/node-npmdoc-{{env.npm_package_name}}) \
+\n\
+\n\
+#### {{env.npm_package_description}} \
+\n\
+\n\
+[![NPM](https://nodei.co/npm/{{env.npm_package_name}}.png?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.com/package/{{env.npm_package_name}}) \
+\n\
+\n\
+- [https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html) \
+\n\
+\n\
+[![apidoc](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenCapture.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html) \
+\n\
+\n\
+![npmPackageListing](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenCapture.npmPackageListing.svg) \
+\n\
+\n\
+![npmPackageDependencyTree](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenCapture.npmPackageDependencyTree.svg) \
+\n\
+\n\
+\n\
+\n\
+# package.json \
+\n\
+\n\
+```json \
+\n\
+\n\
+{{packageJson jsonStringify4 markdownCodeSafe}} \
+\n\
+``` \
+\n\
+\n\
+\n\
+\n\
+# misc\n\
+- this document was created with [utility2](https://github.com/kaizhu256/node-utility2)\n\
+';
+
+
+
+local.assetsDict['/assets.readmeCustomOrg.npmtest.template.md'] = '\
+# npmtest-{{env.npm_package_name}} \
+\n\
+\n\
+#### basic test coverage for \
+{{#if env.npm_package_homepage}} \
+[{{env.npm_package_name}} (v{{env.npm_package_version}})]({{env.npm_package_homepage}}) \
+{{#unless env.npm_package_homepage}} \
+{{env.npm_package_name}} (v{{env.npm_package_version}}) \
+{{/if env.npm_package_homepage}} \
+[![npm package](https://img.shields.io/npm/v/npmtest-{{env.npm_package_name}}.svg?style=flat-square)](https://www.npmjs.org/package/npmtest-{{env.npm_package_name}}) \
+[![travis-ci.org build-status](https://api.travis-ci.org/npmtest/node-npmtest-{{env.npm_package_name}}.svg)](https://travis-ci.org/npmtest/node-npmtest-{{env.npm_package_name}}) \
+\n\
+\n\
+#### {{env.npm_package_description}} \
+\n\
+\n\
+[![NPM](https://nodei.co/npm/{{env.npm_package_name}}.png?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.com/package/{{env.npm_package_name}}) \
+\n\
+\n\
+| git-branch : | [alpha](https://github.com/npmtest/node-npmtest-{{env.npm_package_name}}/tree/alpha)|\n\
+|--:|:--| \
+\n\
+| coverage : | [![istanbul-coverage](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.badge.svg)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.html/index.html)| \
+\n\
+| test-report : | [![test-report](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.badge.svg)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.html)| \
+\n\
+| build-artifacts : | [![build-artifacts](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/glyphicons_144_folder_open.png)](https://github.com/npmtest/node-npmtest-{{env.npm_package_name}}/tree/gh-pages/build)| \
+\n\
+\n\
+- [https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.html/index.html](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.html/index.html) \
+\n\
+\n\
+[![istanbul-coverage](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/screenCapture.buildCi.browser.%252Ftmp%252Fbuild%252Fcoverage.lib.html.png)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/coverage.html/index.html) \
+\n\
+\n\
+- [https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.html](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.html) \
+\n\
+\n\
+[![test-report](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/screenCapture.buildCi.browser.%252Ftmp%252Fbuild%252Ftest-report.html.png)](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/test-report.html) \
+\n\
+\n\
+- [https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html) \
+\n\
+\n\
+[![apidoc](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screenCapture.buildCi.browser.%252Ftmp%252Fbuild%252Fapidoc.html.png)](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/apidoc.html) \
+\n\
+\n\
+![npmPackageListing](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/screenCapture.npmPackageListing.svg) \
+\n\
+\n\
+![npmPackageDependencyTree](https://npmtest.github.io/node-npmtest-{{env.npm_package_name}}/build/screenCapture.npmPackageDependencyTree.svg) \
+\n\
+\n\
+\n\
+\n\
+# package.json \
+\n\
+\n\
+```json \
+\n\
+\n\
+{{packageJson jsonStringify4 markdownCodeSafe}} \
+\n\
+``` \
+\n\
+\n\
+\n\
+\n\
+# misc\n\
+- this document was created with [utility2](https://github.com/kaizhu256/node-utility2)\n\
 ';
 
 
@@ -10065,6 +10310,16 @@ local.assetsDict['/assets.test.template.js'] = '\
 \n\
     // run browser js\-env code - post-init\n\
     case \'browser\':\n\
+        local.testCase_browser_nullCase = local.testCase_browser_nullCase || function (\n\
+            options,\n\
+            onError\n\
+        ) {\n\
+        /*\n\
+         * this function will test browsers\'s null-case handling-behavior-behavior\n\
+         */\n\
+            onError(null, options);\n\
+        };\n\
+\n\
         // run tests\n\
         local.nop(local.modeTest &&\n\
             document.querySelector(\'#testRunButton1\') &&\n\
@@ -10084,10 +10339,6 @@ local.assetsDict['/assets.test.template.js'] = '\
          * this function will test buildApidoc\'s default handling-behavior-behavior\n\
          */\n\
             options = { modulePathList: module.paths };\n\
-            if (local.env.npm_package_buildNpmdoc) {\n\
-                local.buildNpmdoc(options, onError);\n\
-                return;\n\
-            }\n\
             local.buildApidoc(options, onError);\n\
         };\n\
 \n\
@@ -10101,9 +10352,19 @@ local.assetsDict['/assets.test.template.js'] = '\
             local.testCase_buildReadme_default(options, local.onErrorThrow);\n\
             local.testCase_buildLib_default(options, local.onErrorThrow);\n\
             local.testCase_buildTest_default(options, local.onErrorThrow);\n\
+            local.testCase_buildCustomOrg_default(options, local.onErrorThrow);\n\
             options = [];\n\
             local.buildApp(options, onError);\n\
         };\n\
+\n\
+        local.testCase_buildCustomOrg_default = local.testCase_buildCustomOrg_default ||\n\
+            function (options, onError) {\n\
+            /*\n\
+             * this function will test buildCustomOrg\'s default handling-behavior\n\
+             */\n\
+                options = {};\n\
+                local.buildCustomOrg(options, onError);\n\
+            };\n\
 \n\
         local.testCase_buildLib_default = local.testCase_buildLib_default || function (\n\
             options,\n\
@@ -10123,10 +10384,6 @@ local.assetsDict['/assets.test.template.js'] = '\
         /*\n\
          * this function will test buildReadme\'s default handling-behavior-behavior\n\
          */\n\
-            if (local.env.npm_package_buildNpmdoc) {\n\
-                onError();\n\
-                return;\n\
-            }\n\
             options = {};\n\
             local.buildReadme(options, onError);\n\
         };\n\
@@ -10262,7 +10519,10 @@ local.assetsDict['/assets.testReport.template.html'] = '\
 <h4>\n\
     {{testPlatformNumber}}. {{name htmlSafe}}<br>\n\
     {{#if screenCaptureImg}}\n\
-    <a href="{{screenCaptureImg}}"><img src="{{screenCaptureImg}}"></a><br>\n\
+    <a href="{{screenCaptureImg encodeURIComponent}}">\n\
+        <img src="{{screenCaptureImg encodeURIComponent}}">\n\
+    </a>\n\
+    <br>\n\
     {{/if screenCaptureImg}}\n\
     <span>time-elapsed</span>- {{timeElapsed}} ms<br>\n\
     <span>tests failed</span>- {{testsFailed}}<br>\n\
@@ -10474,14 +10734,14 @@ local.assetsDict['/favicon.ico'] = '';
             boundary = '--' + Date.now().toString(16) + Math.random().toString(16);
             // init result
             result = [];
-            local.listForEachAsync(this.entryList, function (element, ii, list, onParallel) {
+            local.onParallelList({
+                list: this.entryList
+            }, function (options, onParallel) {
                 var value;
-                // jslint-hack
-                local.nop(list);
-                value = element.value;
+                value = options.element.value;
                 if (!(value instanceof local.Blob)) {
-                    result[ii] = [boundary +
-                        '\r\nContent-Disposition: form-data; name="' + element.name +
+                    result[options.ii] = [boundary +
+                        '\r\nContent-Disposition: form-data; name="' + options.element.name +
                         '"\r\n\r\n', value, '\r\n'];
                     onParallel.counter += 1;
                     onParallel();
@@ -10490,8 +10750,9 @@ local.assetsDict['/favicon.ico'] = '';
                 // read from blob in parallel
                 onParallel.counter += 1;
                 local.blobRead(value, 'binary', function (error, data) {
-                    result[ii] = !error && [boundary +
-                        '\r\nContent-Disposition: form-data; name="' + element.name + '"' +
+                    result[options.ii] = !error && [boundary +
+                        '\r\nContent-Disposition: form-data; name="' + options.element.name +
+                        '"' +
                         // read param filename
                         (value && value.name
                             ? '; filename="' + value.name + '"'
@@ -11344,7 +11605,7 @@ local.assetsDict['/favicon.ico'] = '';
          * this function will spawn an electron process to test options.url
          */
             var done, modeNext, onNext, onParallel, timerTimeout;
-            if (local.modeJs === 'node') {
+            if (typeof local === 'object' && local && local.modeJs === 'node') {
                 local.objectSetDefault(options, local.envSanitize(local.env));
                 options.timeoutDefault = options.timeoutDefault || local.timeoutDefault;
             }
@@ -11360,8 +11621,16 @@ local.assetsDict['/favicon.ico'] = '';
                     if (!(/^\w+:\/\//).test(options.url)) {
                         options.url = local.path.resolve(process.cwd(), options.url);
                     }
+                    options.urlParsed = local.urlParse(options.url);
+                    options.testName = options.urlParsed.pathname;
+                    if (options.testName.indexOf(process.cwd()) === 0) {
+                        options.testName = options.testName.replace(process.cwd(), '');
+                    }
+                    if (local.env.npm_config_modeBrowserTestHostInclude) {
+                        options.testName = options.urlParsed.host + options.testName;
+                    }
                     options.testName = local.env.MODE_BUILD + '.browser.' +
-                        encodeURIComponent(local.urlParse(options.url).pathname
+                        encodeURIComponent(options.testName
                             .replace(
                                 '/build..' + local.env.CI_BRANCH + '..' + local.env.CI_HOST,
                                 '/build'
@@ -11370,13 +11639,12 @@ local.assetsDict['/favicon.ico'] = '';
                         fileCoverage: local.env.npm_config_dir_tmp +
                             '/coverage.' + options.testName + '.json',
                         fileScreenCapture: (local.env.npm_config_dir_build +
-                            '/screen-capture.' + options.testName + '.png')
-                            .replace((/%/g), '_')
-                            .replace((/_2F\.png$/), '.png'),
+                            '/screenCapture.' + options.testName + '.png'),
                         fileTestReport: local.env.npm_config_dir_tmp +
                             '/test-report.' + options.testName + '.json',
                         modeBrowserTest: 'test',
-                        timeExit: Date.now() + options.timeoutDefault
+                        timeExit: Date.now() + options.timeoutDefault,
+                        timeoutScreenCapture: Number(options.timeoutScreenCapture || 10000)
                     }, 1);
                     // init timerTimeout
                     timerTimeout = local.onTimeout(
@@ -11384,16 +11652,22 @@ local.assetsDict['/favicon.ico'] = '';
                         options.timeoutDefault,
                         options.testName
                     );
-                    // init file urlBrowser
+                    // init file fileElectronHtml
+                    options.browserTestScript = local.browserTest
+                        .toString()
+                        .replace((/<\//g), '<\\/')
+                        // coverage-hack - un-instrument
+                        .replace((/\b__cov_.*?\+\+/g), '0');
                     options.modeNext = 20;
-                    options.urlBrowser = local.env.npm_config_dir_tmp + '/electron.' +
+                    options.fileElectronHtml = local.env.npm_config_dir_tmp + '/electron.' +
                         Date.now().toString(16) + Math.random().toString(16) + '.html';
-                    local.fsWriteFileWithMkdirpSync(options.urlBrowser, '<style>body {' +
+                    local.fsWriteFileWithMkdirpSync(options.fileElectronHtml, '<style>body {' +
                             'border: 1px solid black;' +
                             'margin: 0;' +
                             'padding: 0;' +
                         '}</style>' +
-                        '<webview id=webview1 src="' +
+                        '<webview id=webview1 preload="' + options.fileElectronHtml +
+                        '.preload.js" src="' +
                         options.url.replace('{{timeExit}}', options.timeExit) +
                         '" style="' +
                             'border: none;' +
@@ -11402,20 +11676,22 @@ local.assetsDict['/favicon.ico'] = '';
                             'padding: 0;' +
                             'width: 100%;' +
                         '"></webview>' +
-                        '<script>window.local = {}; (' + local.browserTest
-                            .toString()
-                            .replace((/<\//g), '<\\/')
-                            // coverage-hack - un-instrument
-                            .replace((/\b__cov_.*?\+\+/g), '0') +
+                        '<script>window.local = {}; (' + options.browserTestScript +
                         '(' + JSON.stringify(options) + '))</script>');
                     console.error('\nbrowserTest - created electron entry-page ' +
-                        options.urlBrowser + '\n');
+                        options.fileElectronHtml + '\n');
+                    // init file fileElectronHtml.preload.js
+                    options.modeNext = 30;
+                    local.fsWriteFileWithMkdirpSync(
+                        options.fileElectronHtml + '.preload.js',
+                        '(' + options.browserTestScript + '(' + JSON.stringify(options) +
+                            '))'
+                    );
                     // spawn an electron process to test a url
                     options.modeNext = 10;
                     local.processSpawnWithTimeout('electron', [
                         __filename,
                         'browserTest',
-                        '--disable-overlay-scrollbar',
                         '--enable-logging'
                     ], {
                         env: options,
@@ -11425,6 +11701,12 @@ local.assetsDict['/favicon.ico'] = '';
                     }).once('exit', onNext);
                     break;
                 case 2:
+                    // cleanup fileElectronHtml
+                    try {
+                        local.fs.unlinkSync(options.fileElectronHtml);
+                        local.fs.unlinkSync(options.fileElectronHtml + '.preload.js');
+                    } catch (ignore) {
+                    }
                     console.error('\nbrowserTest - exit-code ' + error + ' - ' + options.url +
                         '\n');
                     // merge browser coverage
@@ -11456,10 +11738,10 @@ local.assetsDict['/favicon.ico'] = '';
                         onNext(local._debugTryCatchErrorCaught);
                         return;
                     }
-                    console.error('\nbrowserTest - merging test-report from ' +
-                        options.fileTestReport + '\n');
                     if (!options.modeTestIgnore) {
                         local.testReportMerge(local.testReport, data);
+                        console.error('\nbrowserTest - merged test-report from file://' +
+                            options.fileTestReport + '\n');
                     }
                     // create test-report.json
                     local.fs.writeFileSync(
@@ -11470,82 +11752,120 @@ local.assetsDict['/favicon.ico'] = '';
                     break;
                 // run electron-node code
                 case 11:
+                    local.electron = require('electron');
                     // handle uncaughtexception
                     process.once('uncaughtException', onNext);
                     // wait for electron to init
-                    require('electron').app.once('ready', onNext);
+                    local.electron.app.once('ready', onNext);
                     break;
                 case 12:
-                    options.BrowserWindow = require('electron').BrowserWindow;
+                    options.BrowserWindow = local.electron.BrowserWindow;
                     local.objectSetDefault(
                         options,
                         { frame: false, height: 768, width: 1024, x: 0, y: 0 }
                     );
                     // init browserWindow
                     options.browserWindow = new options.BrowserWindow(options);
-                    options.browserWindow.once('page-title-updated', onNext);
+                    onParallel = local.onParallel(onNext);
+                    onParallel.counter += 1;
+                    options.browserWindow.on('page-title-updated', function (event, title) {
+                        if ((!event || title).indexOf(options.fileElectronHtml) === 0) {
+                            onParallel();
+                        }
+                    });
                     // load url in browserWindow
-                    options.browserWindow.loadURL('file://' + options.urlBrowser);
+                    options.browserWindow.loadURL('file://' + options.fileElectronHtml);
                     break;
                 case 13:
                     console.error('\nbrowserTest - opened url ' + options.url + '\n');
-                    onParallel = local.onParallel(onNext);
                     onParallel.counter += 1;
                     if (options.modeBrowserTest === 'test') {
                         onParallel.counter += 1;
-                        options.browserWindow.once('page-title-updated', function () {
-                            onParallel();
-                        });
                     }
                     onParallel.counter += 1;
                     setTimeout(function () {
                         options.browserWindow.capturePage(options, function (data) {
                             local.fs.writeFileSync(options.fileScreenCapture, data.toPng());
-                            console.error('\nbrowserTest - created screen-capture file://' +
+                            console.error('\nbrowserTest - created screenCapture file://' +
                                 options.fileScreenCapture + '\n');
                             onParallel();
                         });
-                    }, Number(options.timeoutScreenCapture || 5000));
-                    onParallel();
+                    }, options.timeoutScreenCapture);
                     break;
-                // run electron-browser code
+                case 14:
+                    console.error('browserTest - created screenCapture file://' +
+                        options.fileScreenCapture.replace((/\.\w+$/), '.html'));
+                    onNext();
+                    break;
+                // run electron-browserWindow code
                 case 21:
                     options.fs = require('fs');
                     options.webview1 = document.querySelector('#webview1');
                     options.webview1.addEventListener('did-get-response-details', function () {
-                        document.title = 'opened ' + location.href;
+                        document.title = options.fileElectronHtml + ' url opened';
                     });
                     options.webview1.addEventListener('console-message', function (event) {
+                        modeNext = 21;
                         try {
-                            options.global_test_results = event.message
-                                .indexOf('{"global_test_results":{') === 0 &&
-                                JSON.parse(event.message).global_test_results;
-                            if (options.global_test_results.testReport) {
-                                // merge screen-capture into test-report
-                                options.global_test_results.testReport.testPlatformList[
-                                    0
-                                ].screenCaptureImg =
-                                    options.fileScreenCapture.replace((/.*\//), '');
-                                // save browser test-report
-                                options.fs.writeFileSync(
-                                    options.fileTestReport,
-                                    JSON.stringify(options.global_test_results.testReport)
-                                );
-                                // save browser coverage
-                                if (options.global_test_results.coverage) {
-                                    require('fs').writeFileSync(
-                                        options.fileCoverage,
-                                        JSON.stringify(options.global_test_results.coverage)
-                                    );
-                                }
-                                document.title = 'testReport written';
-                                return;
-                            }
+                            onNext(null, event);
                         } catch (errorCaught) {
-                            console.error(errorCaught.stack);
+                            console.error(errorCaught);
                         }
-                        console.error(event.message);
                     });
+                    break;
+                case 22:
+                    data.tmp = data.message
+                        .slice(0, 1024)
+                        .split(options.fileElectronHtml + ' ')
+                        .slice(0, 2);
+                    if (data.tmp.length >= 2) {
+                        data.tmp[1] = data.tmp[1].split(' ')[0];
+                        data.tmp[2] = data.message
+                            .slice(data.tmp.join(options.fileElectronHtml + ' ').length + 1);
+                    }
+                    switch (data.tmp[1]) {
+                    case 'global_test_results':
+                        options.global_test_results =
+                            JSON.parse(data.tmp[2]).global_test_results;
+                        if (options.global_test_results.testReport) {
+                            // merge screenCapture into test-report
+                            options.global_test_results.testReport.testPlatformList[0]
+                                .screenCaptureImg =
+                                options.fileScreenCapture.replace((/.*\//), '');
+                            // save browser test-report
+                            options.fs.writeFileSync(
+                                options.fileTestReport,
+                                JSON.stringify(options.global_test_results.testReport)
+                            );
+                            // save browser coverage
+                            if (options.global_test_results.coverage) {
+                                require('fs').writeFileSync(
+                                    options.fileCoverage,
+                                    JSON.stringify(options.global_test_results.coverage)
+                                );
+                            }
+                            document.title = options.fileElectronHtml + ' testReport written';
+                        }
+                        break;
+                    case 'html':
+                        options.fs.writeFileSync(
+                            options.fileScreenCapture.replace((/\.\w+$/), '.html'),
+                            data.tmp[2]
+                        );
+                        document.title = options.fileElectronHtml + ' html written';
+                        break;
+                    default:
+                        console.error(data.message);
+                    }
+                    break;
+                // run electron-webview code
+                case 31:
+                    window.fileElectronHtml = options.fileElectronHtml;
+                    // message html back to browserWindow
+                    setTimeout(function () {
+                        console.error(options.fileElectronHtml + ' html ' +
+                            document.documentElement.outerHTML);
+                    }, options.timeoutScreenCapture);
                     break;
                 default:
                     if (done) {
@@ -11704,12 +12024,19 @@ return Utf8ArrayToStr(bff);
         /*
          * this function will build the apidoc
          */
+            if (local.env.npm_package_buildCustomOrg && !options.modeForce) {
+                onError();
+                return;
+            }
             // optimization - do not run if $npm_config_mode_coverage = all
             if (local.env.npm_config_mode_coverage === 'all') {
                 onError();
                 return;
             }
-            local.objectSetDefault(options, { blacklistDict: local });
+            local.objectSetDefault(options, {
+                blacklistDict: local,
+                require: local.requireInSandbox
+            });
             // create apidoc.html
             local.fsWriteFileWithMkdirpSync(
                 local.env.npm_config_dir_build + '/apidoc.html',
@@ -11717,18 +12044,16 @@ return Utf8ArrayToStr(bff);
             );
             console.error('created apidoc file://' + local.env.npm_config_dir_build +
                 '/apidoc.html\n');
-            local.browserTest({
-                modeBrowserTest: 'screenCapture',
-                url: local.env.npm_config_dir_build + '/apidoc.html'
-            }, onError);
+            onError();
         };
 
         local.buildApp = function (options, onError) {
         /*
          * this function will build the app
          */
+            var writeFileSync;
             local.fsRmrSync(local.env.npm_config_dir_build + '/app');
-            local.listForEachAsync(options.concat([{
+            local.onParallelList({ list: options.concat([{
                 file: '/assets.' + local.env.npm_package_nameAlias + '.js',
                 url: '/assets.' + local.env.npm_package_nameAlias + '.js'
             }, {
@@ -11752,8 +12077,8 @@ return Utf8ArrayToStr(bff);
             }, {
                 file: '/jsonp.utility2._stateInit',
                 url: '/jsonp.utility2._stateInit?callback=window.utility2._stateInit'
-            }]), function (options, ii, list, onParallel) {
-                options = list[ii];
+            }]) }, function (options, onParallel) {
+                options = options.element;
                 onParallel.counter += 1;
                 local.ajax(options, function (error, xhr) {
                     // validate no error occurred
@@ -11771,16 +12096,16 @@ return Utf8ArrayToStr(bff);
             }, function (error) {
                 // validate no error occurred
                 local.assert(!error, error);
-                /* istanbul ignore next */
-                if (!local.global.__coverage__) {
-                    local.fs.writeFileSync(
-                        'assets.' + local.env.npm_package_nameAlias + '.rollup.js',
-                        local.assetsDict['/assets.' + local.env.npm_package_nameAlias +
-                            '.rollup.js'] ||
-                            local.assetsDict['/assets.' + local.env.npm_package_nameAlias +
-                                '.js']
-                    );
-                }
+                // coverage-hack
+                writeFileSync = local.fs.writeFileSync;
+                local.nop(local.global.__coverage__ && (function () {
+                    writeFileSync = local.nop;
+                }()));
+                writeFileSync(
+                    'assets.' + local.env.npm_package_nameAlias + '.rollup.js',
+                    local.assetsDict['/assets.' + local.env.npm_package_nameAlias +
+                        '.rollup.js']
+                );
                 // test standalone assets.app.js
                 local.fs.writeFileSync('tmp/assets.app.js', local.assetsDict['/assets.app.js']);
                 local.processSpawnWithTimeout(process.argv[0], ['assets.app.js'], {
@@ -11798,6 +12123,80 @@ return Utf8ArrayToStr(bff);
                         onError();
                     });
             });
+        };
+
+        local.buildCustomOrg = function (options, onError) {
+        /*
+         * this function will build the customOrg
+         */
+            var done, onError2, onParallel;
+            if (!local.env.npm_package_buildCustomOrg && !options.modeForce) {
+                onError();
+                return;
+            }
+            // ensure exit after 5 minutes
+            setTimeout(process.exit, 5 * 60 * 1000);
+            onError2 = function (error) {
+                local.onErrorDefault(error);
+                if (done) {
+                    return;
+                }
+                done = true;
+                // try to recover from error
+                setTimeout(onError, error && local.timeoutDefault);
+            };
+            // try to recover from uncaughtException
+            process.on('uncaughtException', onError2);
+            onParallel = local.utility2.onParallel(onError2);
+            onParallel.counter += 1;
+            // build package.json
+            options.packageJson = JSON.parse(local.fs.readFileSync('package.json', 'utf8'));
+            onParallel.counter += 1;
+            local.buildReadme({
+                dataFrom: '\n# package.json\n```json\n' + JSON.stringify(options.packageJson) +
+                    '\n```\n',
+                modeForce: true
+            }, onParallel);
+            options.packageJson = JSON.parse(local.fs.readFileSync('package.json', 'utf8'));
+            switch (local.env.GITHUB_ORG) {
+            case 'npmdoc':
+                // update package.json
+                local.objectSetOverride(options.packageJson, local.objectLiteralize({
+                    keywords: ['documentation', local.env.npm_package_buildCustomOrg]
+                }), 2);
+                // build apidoc.html
+                onParallel.counter += 1;
+                local.buildApidoc({
+                    dir: local.env.npm_package_buildCustomOrg,
+                    modeForce: true,
+                    modulePathList: options.modulePathList
+                }, onParallel);
+                break;
+            case 'npmtest':
+                // update package.json
+                local.objectSetOverride(options.packageJson, local.objectLiteralize({
+                    keywords: ['coverage', 'test', local.env.npm_package_buildCustomOrg]
+                }), 2);
+                break;
+            }
+            // build README.md
+            options.readme = local.apidocCreate({
+                dir: local.env.npm_package_buildCustomOrg,
+                modeNoApidoc: true,
+                modulePathList: options.modulePathList,
+                require: local.requireInSandbox,
+                template: local.assetsDict['/assets.readmeCustomOrg.' + local.env.GITHUB_ORG +
+                    '.template.md']
+            });
+            local.fs.writeFileSync('README.md', options.readme);
+            console.error('created customOrg file://' + process.cwd() + '/README.md\n');
+            // re-build package.json
+            options.packageJson.description = options.readme.split('\n')[2].trim();
+            local.fs.writeFileSync(
+                'package.json',
+                local.jsonStringifyOrdered(options.packageJson, null, 4) + '\n'
+            );
+            onParallel();
         };
 
         local.buildLib = function (options, onError) {
@@ -11841,100 +12240,14 @@ return Utf8ArrayToStr(bff);
             onError();
         };
 
-        local.buildNpmdoc = function (options, onError) {
-        /*
-         * this function will build the npmdoc
-         */
-            var onParallel, packageJson;
-            onParallel = local.utility2.onParallel(onError);
-            onParallel.counter += 1;
-            // build package.json
-            packageJson = JSON.parse(local.fs.readFileSync('package.json', 'utf8'));
-            local.objectSetDefault(packageJson, local.objectLiteralize({
-                devDependencies: {
-                    '$[]': [local.env.npm_package_buildNpmdoc, '*']
-                },
-                repository: {
-                    type: 'git',
-                    url: 'https://github.com/npmdoc/node-npmdoc-' +
-                        local.env.npm_package_buildNpmdoc + '.git'
-                }
-            }), 2);
-            local.objectSetOverride(packageJson, local.objectLiteralize({
-                keywords: ['documentation', local.env.npm_package_buildNpmdoc]
-            }), 2);
-            onParallel.counter += 1;
-            local.buildReadme({
-                dataFrom: '\n# package.json\n```json\n' +
-                    JSON.stringify(packageJson) + '\n```\n'
-            }, onParallel);
-            packageJson = JSON.parse(local.fs.readFileSync('package.json', 'utf8'));
-            // build apidoc.html
-            onParallel.counter += 1;
-            local.buildApidoc({
-                dir: local.env.npm_package_buildNpmdoc,
-                modulePathList: options.modulePathList
-            }, onParallel);
-            // build README.md
-            options = { modulePathList: options.modulePathList };
-            options.readme = local.apidocCreate({
-                dir: local.env.npm_package_buildNpmdoc,
-/* jslint-ignore-begin */
-header: '\
-# api documentation for \
-{{#if env.npm_package_homepage}} \
-[{{env.npm_package_name}} (v{{env.npm_package_version}})]({{env.npm_package_homepage}}) \
-{{#unless env.npm_package_homepage}} \
-{{env.npm_package_name}} (v{{env.npm_package_version}}) \
-{{/if env.npm_package_homepage}} \
-[![npm package](https://img.shields.io/npm/v/npmdoc-{{env.npm_package_name}}.svg?style=flat-square)](https://www.npmjs.org/package/npmdoc-{{env.npm_package_name}}) \
-[![travis-ci.org build-status](https://api.travis-ci.org/npmdoc/node-npmdoc-{{env.npm_package_name}}.svg)](https://travis-ci.org/npmdoc/node-npmdoc-{{env.npm_package_name}}) \
-\n\
-#### {{env.npm_package_description}} \
-\n\
-\n\
-[![NPM](https://nodei.co/npm/{{env.npm_package_name}}.png?downloads=true)](https://www.npmjs.com/package/{{env.npm_package_name}}) \
-\n\
-\n\
-[![apidoc](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screen-capture.buildNpmdoc.browser._2Fhome_2Ftravis_2Fbuild_2Fnpmdoc_2Fnode-npmdoc-{{env.npm_package_name}}_2Ftmp_2Fbuild_2Fapidoc.html.png)](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build..beta..travis-ci.org/apidoc.html) \
-\n\
-\n\
-![package-listing](https://npmdoc.github.io/node-npmdoc-{{env.npm_package_name}}/build/screen-capture.npmPackageListing.svg) \
-\n\
-\n\
-\n\
-\n\
-# package.json \
-\n\
-\n\
-```json \
-\n\
-\n\
-{{packageJson jsonStringify4 markdownCodeSafe}} \
-\n\
-``` \
-\n\
-',
-/* jslint-ignore-end */
-                modulePathList: options.modulePathList,
-                template: local.apidoc.templateApidocMd
-            });
-            local.fs.writeFileSync('README.md', options.readme);
-            // re-build package.json
-            packageJson.description = (/\w.*/).exec(options.readme)[0]
-                .replace((/ {2,}/g), ' ')
-                .trim();
-            local.fs.writeFileSync(
-                'package.json',
-                local.jsonStringifyOrdered(packageJson, null, 4) + '\n'
-            );
-            onParallel();
-        };
-
         local.buildReadme = function (options, onError) {
         /*
          * this function will build the readme in jslint-lite style
          */
+            if (local.env.npm_package_buildCustomOrg && !options.modeForce) {
+                onError();
+                return;
+            }
             local.objectSetDefault(options, {
                 customize: local.nop,
                 dataFrom: local.tryCatchReadFile('README.md', 'utf8')
@@ -12107,89 +12420,155 @@ header: '\
             return tmp;
         };
 
-        local.dbTableTravisRepoCreate = function (options, onError) {
+        local.dbTableTravisOrgCreate = function (options, onError) {
         /*
-         * this function will create a persistent dbTableTravisRepo
+         * this function will create a persistent dbTableTravisOrg
          */
+            options = local.objectSetDefault(options, { githubOrg: local.env.GITHUB_ORG });
             options = local.objectSetDefault(options, {
-                idIndexCreateList: [{ name: 'githubRepo' }],
-                name: 'TravisRepo'
+                name: 'TravisOrg.' + options.githubOrg,
+                sizeLimit: 1000,
+                sortDefault: [{
+                    fieldName: '_id'
+                }, {
+                    fieldName: 'buildStartedAt'
+                }, {
+                    fieldName: 'buildState'
+                }, {
+                    fieldName: 'active'
+                }]
             });
-            local.dbTableTravisRepo = local.db.dbTableCreateOne(options, onError);
-            return local.dbTableTravisRepo;
+            local.dbTableTravisOrg = local.db.dbTableCreateOne(options, onError);
+            return local.dbTableTravisOrg;
         };
 
-        local.dbTableTravisRepoCrudGetManyByQuery = function (options, onError) {
+        local.dbTableTravisOrgCrudGetManyByQuery = function (options) {
         /*
-         * this function will query dbTableTravisRepo
+         * this function will query dbTableTravisOrg
          */
+            options = local.objectSetDefault(options, { githubOrg: local.env.GITHUB_ORG });
             options = local.objectSetDefault(options, {
-                fieldList: ['githubRepo', 'last_build_started_at', 'last_build_status'],
-                sort: [{ fieldName: 'last_build_started_at' }]
-            });
-            return local.dbTableTravisRepoCreate().crudGetManyByQuery(options, onError);
+                query: { buildStartedAt: { $not: { $gt: new Date(Date.now() - (
+                    Number(options.olderThanLast) || 0
+                )).toISOString() } } }
+            }, 2);
+            console.error('dbTableTravisOrgCrudGetManyByQuery - ' + JSON.stringify(options));
+            return local.dbTableTravisOrg.crudGetManyByQuery(options);
         };
 
-        local.dbTableTravisRepoUpdate = function (options, onError) {
+        local.dbTableTravisOrgUpdate = function (options, onError) {
         /*
-         * this function will update dbTableTravisRepo with active, public repos
+         * this function will update dbTableTravisOrg with active, public repos
          */
-            var self;
-            options = local.objectSetDefault(options, { queryLimit: 100, rateLimit: 10 });
+            var count, dbRowList, self;
+            options = local.objectSetDefault(options, { githubOrg: local.env.GITHUB_ORG });
             local.onNext(options, function (error, data) {
                 switch (options.modeNext) {
                 case 1:
-                    console.error('dbTableTravisRepoUpdate - updating ' + options.queryLimit +
-                        ' dbRows ...');
-                    local.timeElapsedStart(options);
-                    self = local.dbTableTravisRepo =
-                        local.dbTableTravisRepoCreate(options, options.onNext);
+                    self = local.dbTableTravisOrg =
+                        local.dbTableTravisOrgCreate(options, options.onNext);
                     break;
                 case 2:
-                    self = local.dbTableTravisRepo = data;
-                    local.ajax({
-                        headers: { Authorization: 'token ' + local.env.TRAVIS_ACCESS_TOKEN },
-                        url: 'https://api.travis-ci.org/hooks'
-                    }, options.onNext);
+                    self = local.dbTableTravisOrg = data;
+                    data = {
+                        headers: {
+                            'Travis-API-Version': '3',
+                            Authorization: 'token ' + local.env.TRAVIS_ACCESS_TOKEN
+                        },
+                        url: 'https://api.travis-ci.org/repos?limit=1'
+                    };
+                    console.error('fetching ' + data.url + ' ...');
+                    local.ajax(data, options.onNext);
                     break;
                 case 3:
-                    // validate no error occurred
-                    local.assert(!error, error);
-                    data = JSON.parse(data.responseText)
-                        .filter(function (dbRow) {
-                            return dbRow.active === true && dbRow.private === false;
-                        })
-                        .map(function (dbRow) {
-                            dbRow.githubRepo = dbRow.uid.replace(':', '/');
-                            return dbRow;
-                        });
-                    self.crudUpdateManyById(data);
-                    data = local.dbTableTravisRepoCrudGetManyByQuery({
-                        limit: options.queryLimit
-                    });
-                    local.listForEachAsync(data, function (dbRow, ii, list, onParallel) {
-                        dbRow = list[ii];
+                    count = JSON.parse(data.responseText)['@pagination'].count;
+                    console.error('... fetched ' + data.url + ' with ' + count + ' repos');
+                    dbRowList = [];
+                    local.onParallelList({
+                        list: [{
+                            offset: 0,
+                            sort_by: 'asc'
+                        }, {
+                            offset: 100,
+                            sort_by: 'asc'
+                        }, {
+                            offset: 200,
+                            sort_by: 'asc'
+                        }, {
+                            offset: 300,
+                            sort_by: 'asc'
+                        }, {
+                            offset: 400,
+                            sort_by: 'asc'
+                        }, {
+                            offset: Math.floor(Math.random() * count) - 100,
+                            sort_by: 'asc'
+                        }, {
+                            offset: Math.floor(Math.random() * count) - 100,
+                            sort_by: 'asc'
+                        }, {
+                            offset: 0,
+                            sort_by: 'desc'
+                        }, {
+                            offset: count - 500,
+                            sort_by: 'desc'
+                        }, {
+                            offset: count - 400,
+                            sort_by: 'desc'
+                        }, {
+                            offset: count - 300,
+                            sort_by: 'desc'
+                        }, {
+                            offset: count - 200,
+                            sort_by: 'desc'
+                        }, {
+                            offset: count - 100,
+                            sort_by: 'desc'
+                        }]
+                    }, function (options2, onParallel) {
                         onParallel.counter += 1;
-                        local.ajax({
+                        options2 = {
                             headers: {
+                                'Travis-API-Version': '3',
                                 Authorization: 'token ' + local.env.TRAVIS_ACCESS_TOKEN
                             },
-                            url: 'https://api.travis-ci.org/repos/' + dbRow.githubRepo
-                        }, function (error, data) {
+                            url: 'https://api.travis-ci.org/repos?' +
+                                'include=repository.current_build&' +
+                                'limit=100&' +
+                                'offset=' + options2.element.offset + '&' +
+                                'sort_by=current_build%3A' + options2.element.sort_by
+                        };
+                        console.error('fetching ' + options2.url + ' ...');
+                        local.ajax(options2, function (error, data) {
                             // validate no error occurred
                             local.assert(!error, error);
-                            data = JSON.parse(data.responseText);
-                            data.githubRepo = dbRow.githubRepo;
-                            self.crudUpdateOneById(data);
-                            if (onParallel.counter === 1 || ((onParallel.ii + 1) % 10 === 0 &&
-                                    local.timeElapsedPoll(options).timeElapsed >= 5000)) {
-                                local.timeElapsedStart(options, Date.now());
-                                console.error('dbTableTravisRepoUpdate - updated ' +
-                                    (onParallel.ii + 1) + ' dbRows');
-                            }
+                            dbRowList = dbRowList
+                                .concat(JSON.parse(data.responseText).repositories);
+                            console.error('... fetched ' + options2.url);
                             onParallel();
                         });
-                    }, options.onNext, options.rateLimit);
+                    }, options.onNext);
+                    break;
+                case 4:
+                    self.crudRemoveManyByQuery({});
+                    self.crudSetManyById(dbRowList
+                        .filter(function (dbRow) {
+                            return dbRow.private === false && dbRow.slug.indexOf(
+                                options.githubOrg + '/node-' + options.githubOrg + '-'
+                            ) === 0;
+                        })
+                        .map(function (dbRow) {
+                            data = dbRow.current_build || {};
+                            return {
+                                _id: dbRow.name.replace('node-' + options.githubOrg + '-', ''),
+                                active: dbRow.active,
+                                buildDuration: data.duration,
+                                buildFinishedAt: data.finished_at,
+                                buildStartedAt: data.started_at,
+                                buildState: data.state
+                            };
+                        }));
+                    self.save(options.onNext);
                     break;
                 default:
                     local.setTimeoutOnError(onError, error, self);
@@ -12234,7 +12613,9 @@ header: '\
             var result;
             result = {};
             Object.keys(env).forEach(function (key) {
-                if (!local.envKeyIsSensitive(key)) {
+                if (!local.envKeyIsSensitive(key) &&
+                        typeof env[key] === 'string' &&
+                        env[key].length <= 4096) {
                     result[key] = env[key];
                 }
             });
@@ -12254,14 +12635,14 @@ header: '\
         /*
          * this function will exit the current process with the given exitCode
          */
+            local.onErrorDefault(typeof exitCode !== 'number' && exitCode);
             exitCode = !exitCode || Number(exitCode) === 0
                 ? 0
                 : Number(exitCode) || 1;
             switch (local.modeJs) {
             case 'browser':
-                console.error(JSON.stringify({
-                    global_test_results: local.global.global_test_results
-                }));
+                console.error(local.global.fileElectronHtml + ' global_test_results ' +
+                    JSON.stringify({ global_test_results: local.global.global_test_results }));
                 break;
             case 'node':
                 process.exit(exitCode);
@@ -12305,7 +12686,7 @@ header: '\
         /*
          * this function will request the data from options.url
          */
-            var chunkList, onError2, timerTimeout, done, request, response, urlParsed;
+            var chunkList, done, onError2, timerTimeout, request, response, urlParsed;
             // init onError2
             onError2 = function (error) {
                 if (done) {
@@ -12624,32 +13005,6 @@ header: '\
                 jti: Math.random().toString(16).slice(2),
                 nbf: timeNow
             });
-        };
-
-        local.listForEachAsync = function (list, onEach, onError, rateLimit) {
-        /*
-         * this function will
-         * 1. async-run onEach(element, ii, list, onParallel) with the given rateLimit
-         * 2. call onError when done
-         */
-            var ii, onEach2, onParallel;
-            onEach2 = function () {
-                while (ii + 1 < list.length && onParallel.counter < rateLimit) {
-                    ii += 1;
-                    onParallel.ii += 1;
-                    onParallel.remaining -= 1;
-                    onEach(list[ii], ii, list, onParallel);
-                }
-            };
-            onParallel = local.onParallel(onError, onEach2);
-            onParallel.counter += 1;
-            ii = -1;
-            onParallel.ii = -1;
-            onParallel.remaining = list.length;
-            rateLimit = Number(rateLimit) || 8;
-            rateLimit = Math.max(rateLimit, 2);
-            onEach2();
-            onParallel();
         };
 
         local.listGetElementRandom = function (list) {
@@ -12978,15 +13333,13 @@ header: '\
             }
             // search modulePathList
             [
+                ['node_modules'],
                 modulePathList,
                 require('module').globalPaths
             ].some(function (modulePathList) {
                 modulePathList.some(function (modulePath) {
                     try {
-                        tmp = require('path').resolve(
-                            process.cwd(),
-                            modulePath + '/' + module
-                        );
+                        tmp = require('path').resolve(process.cwd(), modulePath + '/' + module);
                         result = require('fs').statSync(tmp).isDirectory() && tmp;
                         return result;
                     } catch (ignore) {
@@ -13163,7 +13516,7 @@ header: '\
          * this function will if error exists, then print error.stack to stderr
          */
             if (error && !local.global.__coverage__) {
-                console.error(error.stack);
+                console.error(error);
             }
         };
 
@@ -13236,7 +13589,7 @@ header: '\
             return options;
         };
 
-        local.onParallel = function (onError, onEach) {
+        local.onParallel = function (onError, onEach, onRetry) {
         /*
          * this function will create a function that will
          * 1. run async tasks in parallel
@@ -13245,7 +13598,11 @@ header: '\
             var onParallel;
             onError = local.onErrorWithStack(onError);
             onEach = onEach || local.nop;
-            onParallel = function (error) {
+            onRetry = onRetry || local.nop;
+            onParallel = function (error, data) {
+                if (onRetry(error, data)) {
+                    return;
+                }
                 // decrement counter
                 onParallel.counter -= 1;
                 // validate counter
@@ -13257,12 +13614,12 @@ header: '\
                 // handle error
                 if (error) {
                     onParallel.error = error;
-                    // ensure counter < 0
-                    onParallel.counter = -1;
+                    // ensure counter <= 0
+                    onParallel.counter = -Math.abs(onParallel.counter);
                 }
                 // call onError when done
                 if (onParallel.counter <= 0) {
-                    onError(error);
+                    onError(error, data);
                     return;
                 }
                 onEach();
@@ -13271,6 +13628,49 @@ header: '\
             onParallel.counter = 0;
             // return callback
             return onParallel;
+        };
+
+        local.onParallelList = function (options, onEach, onError) {
+        /*
+         * this function will
+         * 1. async-run onEach in parallel,
+         *    with the given options.rateLimit and options.retryLimit
+         * 2. call onError when done
+         */
+            var ii, onEach2, onParallel;
+            onEach2 = function () {
+                while (ii + 1 < options.list.length && onParallel.counter < options.rateLimit) {
+                    ii += 1;
+                    onParallel.ii += 1;
+                    onParallel.remaining -= 1;
+                    onEach({
+                        element: options.list[ii],
+                        ii: ii,
+                        list: options.list,
+                        retry: 0
+                    }, onParallel);
+                }
+            };
+            onParallel = local.onParallel(onError, onEach2, function (error, data) {
+                if (error && data && data.retry < options.retryLimit) {
+                    local.onErrorDefault(error);
+                    data.retry += 1;
+                    setTimeout(function () {
+                        onParallel.counter -= 1;
+                        onEach(data, onParallel);
+                    }, 1000);
+                    return true;
+                }
+            });
+            onParallel.counter += 1;
+            ii = -1;
+            onParallel.ii = -1;
+            onParallel.remaining = options.list.length;
+            options.rateLimit = Number(options.rateLimit) || 6;
+            options.rateLimit = Math.max(options.rateLimit, 3);
+            options.retryLimit = Number(options.retryLimit) || 2;
+            onEach2();
+            onParallel();
         };
 
         local.onReadyAfter = function (onError) {
@@ -13410,7 +13810,7 @@ header: '\
              */
                 // debug error
                 global.utility2_debugReplError = error;
-                console.error(error.stack);
+                console.error(error);
             };
             // save repl eval function
             self.evalDefault = self.eval;
@@ -13611,7 +14011,7 @@ vendor\\)\\(\\b\\|[_s]\\)\
                 {}
             );
             // coverage-hack
-            local.nop(local.env.npm_package_readmeParse && (function () {
+            local.nop(!local.env.npm_package_buildCustomOrg && (function () {
                 local.fs.readFileSync('README.md', 'utf8').replace(
                     (/```\w*?(\n[\W\s]*?example\.js[\n\"][\S\s]+?)\n```/),
                     function (match0, match1, ii, text) {
@@ -13749,6 +14149,54 @@ instruction\n\
                 local.jslintAndPrintConditional(local.assetsDict[key], key);
             });
             return module.exports;
+        };
+
+        local.requireInSandbox = function (file) {
+        /*
+         * this function will require the file in a sandbox-lite env
+         */
+            var exports, mockDict, mockList, tmp;
+            exports = {};
+            mockList = [
+                [ local.global, {
+                    setImmediate: local.nop,
+                    setInterval: local.nop,
+                    setTimeout: local.nop
+                }]
+            ];
+            [
+                [local, 'child_process'],
+                [local, 'cluster'],
+                [local, 'fs'],
+                [local, 'http'],
+                [local, 'https'],
+                [local, 'net'],
+                [local, 'repl'],
+                [local.global, 'process'],
+                [process, 'stdin']
+            ].forEach(function (element) {
+                tmp = element[0][element[1]];
+                mockDict = {};
+                Object.keys(tmp).forEach(function (key) {
+                    if (typeof tmp[key] === 'function' && !(
+                            /^(?:fs\.Read|fs\.read|process\.binding|process\.dlopen)/
+                        ).test(element[1] + '.' + key)) {
+                        mockDict[key] = function () {
+                            return;
+                        };
+                        // coverage-hack
+                        mockDict[key]();
+                    }
+                });
+                mockList.push([ module, mockDict ]);
+            });
+            local.testMock(mockList, function (onError) {
+                local.tryCatchOnError(function () {
+                    exports = require(file);
+                }, console.error);
+                onError();
+            }, local.onErrorThrow);
+            return exports;
         };
 
         local.serverRespondDefault = function (request, response, statusCode, error) {
@@ -14178,8 +14626,8 @@ instruction\n\
                 options.githubRepo.join('/')
             );
             template = template.replace(
-                (/kaizhu256_2Fnode-jslint-lite/g),
-                options.githubRepo.join('_2F')
+                (/kaizhu256%252Fnode-jslint-lite/g),
+                options.githubRepo.join('%252F')
             );
             template = template.replace(
                 (/node-jslint-lite/g),
@@ -14214,7 +14662,9 @@ instruction\n\
             onError2 = function (error) {
                 // restore mock[0] from mock[2]
                 mockList.reverse().forEach(function (mock) {
-                    local.objectSetOverride(mock[0], mock[2]);
+                    Object.keys(mock[2]).forEach(function (key) {
+                        mock[0][key] = mock[2][key];
+                    });
                 });
                 onError(error);
             };
@@ -14225,10 +14675,17 @@ instruction\n\
                     mock[2] = {};
                     // backup mock[0] into mock[2]
                     Object.keys(mock[1]).forEach(function (key) {
+                        if (typeof process === 'object' &&
+                                process.env === mock[0] &&
+                                mock[0][key] === undefined) {
+                            mock[0][key] = '';
+                        }
                         mock[2][key] = mock[0][key];
                     });
                     // override mock[0] with mock[1]
-                    local.objectSetOverride(mock[0], mock[1]);
+                    Object.keys(mock[1]).forEach(function (key) {
+                        mock[0][key] = mock[1][key];
+                    });
                 });
                 // run onTestCase
                 onTestCase(onError2);
@@ -14570,12 +15027,10 @@ instruction\n\
             }, 1000);
             // shallow-copy testPlatform.testCaseList to prevent side-effects
             // from in-place sort from testReportMerge
-            local.listForEachAsync(testPlatform.testCaseList.slice(), function (
-                testCase,
-                ii,
-                list,
-                onParallel
-            ) {
+            local.onParallelList({
+                list: testPlatform.testCaseList.slice(),
+                rateLimit: Infinity
+            }, function (testCase, onParallel) {
                 var onError, timerTimeout;
                 onError = function (error) {
                     // cleanup timerTimeout
@@ -14616,7 +15071,7 @@ instruction\n\
                     // if all tests are done, then create test-report
                     onParallel();
                 };
-                testCase = list[ii];
+                testCase = testCase.element;
                 // init timerTimeout
                 timerTimeout = local.onTimeout(onError, local.timeoutDefault, testCase.name);
                 // increment number of tests remaining
@@ -14714,6 +15169,13 @@ instruction\n\
             // 3. run tests
             local.testRunDefault(options);
             local.onReadyBefore();
+        };
+
+        local.throwError = function () {
+        /*
+         * this function will throw an error
+         */
+            throw new Error();
         };
 
         local.timeElapsedPoll = function (options) {
@@ -14909,9 +15371,9 @@ instruction\n\
             npm_package_nameAlias: (local.env.npm_package_name || '').replace((/\W/g), '_')
         });
         local.objectSetDefault(local.env, {
-            npm_package_description: 'example module',
-            npm_package_name: 'example',
-            npm_package_nameAlias: 'example',
+            npm_package_description: 'the greatest app in the world!',
+            npm_package_name: 'my-app',
+            npm_package_nameAlias: 'my_app',
             npm_package_version: '0.0.1'
         });
         local.errorDefault = new Error('default error');
@@ -14921,23 +15383,20 @@ instruction\n\
         local.istanbulInstrumentInPackage = local.istanbul.instrumentInPackage || local.echo;
         local.istanbulInstrumentSync = local.istanbul.instrumentSync || local.echo;
         local.jslintAndPrint = local.jslint.jslintAndPrint || local.echo;
-        local.packageJsonNpmdocDefault = {
-            "buildNpmdoc": "mysql",
-            "devDependencies": {
-                "electron-lite": "kaizhu256/node-electron-lite#alpha",
-                "utility2": "kaizhu256/node-utility2#alpha"
-            },
-            "homepage": "https://github.com/npmdoc/node-npmdoc-mysql",
-            "name": "npmdoc-mysql",
-            "nameOriginal": "npmdoc-mysql",
-            "repository": {
-                "type": "git",
-                "url": "https://github.com/npmdoc/node-npmdoc-mysql.git"
-            },
-            "scripts": {
-                "build-ci": "utility2 shReadmeTest build_ci.sh"
-            }
+        local.objectWeird = function () {
+            return;
         };
+        // coverage-hack
+        local.tryCatchOnError(function () {
+            local.objectWeird();
+        }, local.nop);
+        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Working_with_Objects
+        // #Defining_getters_and_setters
+        Object.defineProperty(local.objectWeird, 'error', {
+            get: local.throwError,
+            set: local.throwError
+        });
+        local.objectWeird.toString = local.throwError;
         local.regexpEmailValidate = new RegExp(
             '^[a-zA-Z0-9.!#$%&\'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}' +
                 '[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$'
@@ -15023,6 +15482,7 @@ instruction\n\
         local.Module = require('module');
         local.__require = require;
         local.child_process = require('child_process');
+        local.cluster = require('cluster');
         local.fs = require('fs');
         local.http = require('http');
         local.https = require('https');
@@ -15134,8 +15594,6 @@ instruction\n\
             local.assetsDict['/assets.utility2.rollup.js'];
         // merge previous test-report
         if (local.env.npm_config_file_test_report_merge) {
-            console.error('merging file://' + local.env.npm_config_file_test_report_merge +
-                ' to test-report');
             local.testReportMerge(
                 local.testReport,
                 JSON.parse(local.tryCatchReadFile(
@@ -15143,6 +15601,8 @@ instruction\n\
                     'utf8'
                 ) || '{}')
             );
+            console.error('\n' + local.env.MODE_BUILD + ' - merged test-report from file://' +
+                local.env.npm_config_file_test_report_merge);
         }
         break;
     }
@@ -15174,15 +15634,56 @@ instruction\n\
         case 'browserTest':
             local.browserTest({}, local.exit);
             return;
-        case 'dbTableTravisRepoCrudGetManyByQuery':
-            local.dbTableTravisRepoCreate({}, function () {
-                console.log(JSON.stringify(local.dbTableTravisRepoCrudGetManyByQuery(
+        case 'browserTestList':
+            local.onParallelList({
+                list: process.argv[3].split(/\s+/).filter(function (element) {
+                    return element;
+                })
+            }, function (options, onParallel) {
+                onParallel.counter += 1;
+                local.browserTest({ url: options.element }, function () {
+                    onParallel();
+                });
+            }, local.exit);
+            return;
+        case 'dbTableTravisOrgCrudGetManyByQuery':
+            local.dbTableTravisOrgCreate(JSON.parse(process.argv[3] || '{}'), function (error) {
+                // validate no error occurred
+                local.assert(!error, error);
+                console.log(local.dbTableTravisOrgCrudGetManyByQuery(
                     JSON.parse(process.argv[3] || '{}')
-                ), null, 4));
+                )
+                    .map(function (element) {
+                        return element._id;
+                    })
+                    .join('\n'));
             });
             return;
-        case 'dbTableTravisRepoUpdate':
-            local.dbTableTravisRepoUpdate({}, local.exit);
+        case 'dbTableTravisOrgUpdate':
+            local.dbTableTravisOrgUpdate(
+                JSON.parse(process.argv[3] || '{}'),
+                local.onErrorThrow
+            );
+            return;
+        case 'onParallelListSpawn':
+            local.onParallelList({
+                list: process.argv[3].split('\n').filter(function (element) {
+                    return element.trim();
+                }),
+                rateLimit: process.argv[4],
+                retryLimit: process.argv[5]
+            }, function (options, onParallel) {
+                onParallel.counter += 1;
+                local.child_process.spawn(
+                    '/bin/sh',
+                    ['-c', '. ' + local.__dirname + '/lib.utility2.sh; ' + options.element],
+                    { stdio: ['ignore', 1, 2] }
+                ).on('exit', function (exitCode) {
+                    console.error('onParallelListSpawn - [' + (onParallel.ii + 1) +
+                        ' of ' + options.list.length + '] exitCode ' + exitCode);
+                    onParallel(exitCode && new Error(exitCode), options);
+                });
+            }, local.exit);
             return;
         }
         // init lib
