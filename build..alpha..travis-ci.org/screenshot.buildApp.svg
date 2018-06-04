@@ -1,0 +1,585 @@
+<svg height="6030" width="720" xmlns="http://www.w3.org/2000/svg">
+<rect height="6030" fill="#555" width="720"></rect>
+<text fill="#7f7" font-family="Courier New" font-size="12" xml:space="preserve">
+<tspan x="10" y="26"></tspan>
+
+<tspan x="10" y="42">[MODE_BUILD=buildApp] - 2018-06-04T08:13:43.353Z - npm-testing /home/travis/build/npmdoc/node-np\</tspan>
+<tspan x="10" y="58">mdoc-electron</tspan>
+
+<tspan x="10" y="74"></tspan>
+
+<tspan x="10" y="90"></tspan>
+
+<tspan x="10" y="106">buildApp - merged test-report from file /home/travis/build/npmdoc/node-npmdoc-electron/tmp/build\</tspan>
+<tspan x="10" y="122">/test-report.json</tspan>
+
+<tspan x="10" y="138">&gt; server listening on http-port 51272</tspan>
+
+<tspan x="10" y="154">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="170">package.json</tspan>
+
+<tspan x="10" y="186">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="202">cli.js</tspan>
+
+<tspan x="10" y="218">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="234">electron.d.ts</tspan>
+
+<tspan x="10" y="250">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="266">.gitignore</tspan>
+
+<tspan x="10" y="282">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="298">index.js</tspan>
+
+<tspan x="10" y="314">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="330">install.js</tspan>
+
+<tspan x="10" y="346">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="362">LICENSE</tspan>
+
+<tspan x="10" y="378">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="394">package.json</tspan>
+
+<tspan x="10" y="410">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="426">path.txt</tspan>
+
+<tspan x="10" y="442">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="458">README.md</tspan>
+
+<tspan x="10" y="474">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="490">dist/blink_image_resources_200_percent.pak</tspan>
+
+<tspan x="10" y="506">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="522">dist/content_resources_200_percent.pak</tspan>
+
+<tspan x="10" y="538">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="554">dist/content_shell.pak</tspan>
+
+<tspan x="10" y="570">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="586">dist/electron</tspan>
+
+<tspan x="10" y="602">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="618">dist/icudtl.dat</tspan>
+
+<tspan x="10" y="634">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="650">dist/libffmpeg.so</tspan>
+
+<tspan x="10" y="666">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="682">dist/libnode.so</tspan>
+
+<tspan x="10" y="698">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="714">dist/LICENSE</tspan>
+
+<tspan x="10" y="730">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="746">dist/LICENSES.chromium.html</tspan>
+
+<tspan x="10" y="762">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="778">dist/natives_blob.bin</tspan>
+
+<tspan x="10" y="794">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="810">dist/pdf_viewer_resources.pak</tspan>
+
+<tspan x="10" y="826">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="842">dist/snapshot_blob.bin</tspan>
+
+<tspan x="10" y="858">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="874">dist/ui_resources_200_percent.pak</tspan>
+
+<tspan x="10" y="890">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="906">dist/version</tspan>
+
+<tspan x="10" y="922">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="938">dist/views_resources_200_percent.pak</tspan>
+
+<tspan x="10" y="954">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="970">dist/locales/am.pak</tspan>
+
+<tspan x="10" y="986">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1002">dist/locales/ar.pak</tspan>
+
+<tspan x="10" y="1018">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1034">dist/locales/bg.pak</tspan>
+
+<tspan x="10" y="1050">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1066">dist/locales/bn.pak</tspan>
+
+<tspan x="10" y="1082">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1098">dist/locales/ca.pak</tspan>
+
+<tspan x="10" y="1114">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1130">dist/locales/cs.pak</tspan>
+
+<tspan x="10" y="1146">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1162">dist/locales/da.pak</tspan>
+
+<tspan x="10" y="1178">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1194">dist/locales/de.pak</tspan>
+
+<tspan x="10" y="1210">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1226">dist/locales/el.pak</tspan>
+
+<tspan x="10" y="1242">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1258">dist/locales/en-GB.pak</tspan>
+
+<tspan x="10" y="1274">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1290">dist/locales/en-US.pak</tspan>
+
+<tspan x="10" y="1306">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1322">dist/locales/es-419.pak</tspan>
+
+<tspan x="10" y="1338">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1354">dist/locales/es.pak</tspan>
+
+<tspan x="10" y="1370">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1386">dist/locales/et.pak</tspan>
+
+<tspan x="10" y="1402">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1418">dist/locales/fake-bidi.pak</tspan>
+
+<tspan x="10" y="1434">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1450">dist/locales/fa.pak</tspan>
+
+<tspan x="10" y="1466">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1482">dist/locales/fil.pak</tspan>
+
+<tspan x="10" y="1498">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1514">dist/locales/fi.pak</tspan>
+
+<tspan x="10" y="1530">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1546">dist/locales/fr.pak</tspan>
+
+<tspan x="10" y="1562">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1578">dist/locales/gu.pak</tspan>
+
+<tspan x="10" y="1594">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1610">dist/locales/he.pak</tspan>
+
+<tspan x="10" y="1626">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1642">dist/locales/hi.pak</tspan>
+
+<tspan x="10" y="1658">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1674">dist/locales/hr.pak</tspan>
+
+<tspan x="10" y="1690">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1706">dist/locales/hu.pak</tspan>
+
+<tspan x="10" y="1722">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1738">dist/locales/id.pak</tspan>
+
+<tspan x="10" y="1754">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1770">dist/locales/it.pak</tspan>
+
+<tspan x="10" y="1786">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1802">dist/locales/ja.pak</tspan>
+
+<tspan x="10" y="1818">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1834">dist/locales/kn.pak</tspan>
+
+<tspan x="10" y="1850">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1866">dist/locales/ko.pak</tspan>
+
+<tspan x="10" y="1882">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1898">dist/locales/lt.pak</tspan>
+
+<tspan x="10" y="1914">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1930">dist/locales/lv.pak</tspan>
+
+<tspan x="10" y="1946">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1962">dist/locales/ml.pak</tspan>
+
+<tspan x="10" y="1978">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="1994">dist/locales/mr.pak</tspan>
+
+<tspan x="10" y="2010">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="2026">dist/locales/ms.pak</tspan>
+
+<tspan x="10" y="2042">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="2058">dist/locales/nb.pak</tspan>
+
+<tspan x="10" y="2074">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="2090">dist/locales/nl.pak</tspan>
+
+<tspan x="10" y="2106">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="2122">dist/locales/pl.pak</tspan>
+
+<tspan x="10" y="2138">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="2154">dist/locales/pt-BR.pak</tspan>
+
+<tspan x="10" y="2170">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="2186">dist/locales/pt-PT.pak</tspan>
+
+<tspan x="10" y="2202">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="2218">dist/locales/ro.pak</tspan>
+
+<tspan x="10" y="2234">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="2250">dist/locales/ru.pak</tspan>
+
+<tspan x="10" y="2266">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="2282">dist/locales/sk.pak</tspan>
+
+<tspan x="10" y="2298">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="2314">dist/locales/sl.pak</tspan>
+
+<tspan x="10" y="2330">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="2346">dist/locales/sr.pak</tspan>
+
+<tspan x="10" y="2362">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="2378">dist/locales/sv.pak</tspan>
+
+<tspan x="10" y="2394">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="2410">dist/locales/sw.pak</tspan>
+
+<tspan x="10" y="2426">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="2442">dist/locales/ta.pak</tspan>
+
+<tspan x="10" y="2458">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="2474">dist/locales/te.pak</tspan>
+
+<tspan x="10" y="2490">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="2506">dist/locales/th.pak</tspan>
+
+<tspan x="10" y="2522">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="2538">dist/locales/tr.pak</tspan>
+
+<tspan x="10" y="2554">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="2570">dist/locales/uk.pak</tspan>
+
+<tspan x="10" y="2586">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="2602">dist/locales/vi.pak</tspan>
+
+<tspan x="10" y="2618">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="2634">dist/locales/zh-CN.pak</tspan>
+
+<tspan x="10" y="2650">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="2666">dist/locales/zh-TW.pak</tspan>
+
+<tspan x="10" y="2682">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="2698">dist/resources/default_app.asar</tspan>
+
+<tspan x="10" y="2714">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="2730">dist/resources/electron.asar</tspan>
+
+<tspan x="10" y="2746">apidocCreate - requiring /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron ..\</tspan>
+<tspan x="10" y="2762">.</tspan>
+
+<tspan x="10" y="2778">apidocCreate - ... required /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron</tspan>
+
+<tspan x="10" y="2794">apidocCreate - libFile cli.js</tspan>
+
+<tspan x="10" y="2810">apidocCreate - libFile install.js</tspan>
+
+<tspan x="10" y="2826">created apidoc file /home/travis/build/npmdoc/node-npmdoc-electron/tmp/build/apidoc.html</tspan>
+
+<tspan x="10" y="2842"></tspan>
+
+<tspan x="10" y="2858">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="2874">package.json</tspan>
+
+<tspan x="10" y="2890">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="2906">cli.js</tspan>
+
+<tspan x="10" y="2922">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="2938">electron.d.ts</tspan>
+
+<tspan x="10" y="2954">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="2970">.gitignore</tspan>
+
+<tspan x="10" y="2986">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3002">index.js</tspan>
+
+<tspan x="10" y="3018">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3034">install.js</tspan>
+
+<tspan x="10" y="3050">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3066">LICENSE</tspan>
+
+<tspan x="10" y="3082">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3098">package.json</tspan>
+
+<tspan x="10" y="3114">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3130">path.txt</tspan>
+
+<tspan x="10" y="3146">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3162">README.md</tspan>
+
+<tspan x="10" y="3178">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3194">dist/blink_image_resources_200_percent.pak</tspan>
+
+<tspan x="10" y="3210">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3226">dist/content_resources_200_percent.pak</tspan>
+
+<tspan x="10" y="3242">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3258">dist/content_shell.pak</tspan>
+
+<tspan x="10" y="3274">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3290">dist/electron</tspan>
+
+<tspan x="10" y="3306">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3322">dist/icudtl.dat</tspan>
+
+<tspan x="10" y="3338">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3354">dist/libffmpeg.so</tspan>
+
+<tspan x="10" y="3370">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3386">dist/libnode.so</tspan>
+
+<tspan x="10" y="3402">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3418">dist/LICENSE</tspan>
+
+<tspan x="10" y="3434">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3450">dist/LICENSES.chromium.html</tspan>
+
+<tspan x="10" y="3466">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3482">dist/natives_blob.bin</tspan>
+
+<tspan x="10" y="3498">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3514">dist/pdf_viewer_resources.pak</tspan>
+
+<tspan x="10" y="3530">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3546">dist/snapshot_blob.bin</tspan>
+
+<tspan x="10" y="3562">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3578">dist/ui_resources_200_percent.pak</tspan>
+
+<tspan x="10" y="3594">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3610">dist/version</tspan>
+
+<tspan x="10" y="3626">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3642">dist/views_resources_200_percent.pak</tspan>
+
+<tspan x="10" y="3658">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3674">dist/locales/am.pak</tspan>
+
+<tspan x="10" y="3690">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3706">dist/locales/ar.pak</tspan>
+
+<tspan x="10" y="3722">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3738">dist/locales/bg.pak</tspan>
+
+<tspan x="10" y="3754">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3770">dist/locales/bn.pak</tspan>
+
+<tspan x="10" y="3786">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3802">dist/locales/ca.pak</tspan>
+
+<tspan x="10" y="3818">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3834">dist/locales/cs.pak</tspan>
+
+<tspan x="10" y="3850">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3866">dist/locales/da.pak</tspan>
+
+<tspan x="10" y="3882">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3898">dist/locales/de.pak</tspan>
+
+<tspan x="10" y="3914">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3930">dist/locales/el.pak</tspan>
+
+<tspan x="10" y="3946">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3962">dist/locales/en-GB.pak</tspan>
+
+<tspan x="10" y="3978">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="3994">dist/locales/en-US.pak</tspan>
+
+<tspan x="10" y="4010">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4026">dist/locales/es-419.pak</tspan>
+
+<tspan x="10" y="4042">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4058">dist/locales/es.pak</tspan>
+
+<tspan x="10" y="4074">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4090">dist/locales/et.pak</tspan>
+
+<tspan x="10" y="4106">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4122">dist/locales/fake-bidi.pak</tspan>
+
+<tspan x="10" y="4138">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4154">dist/locales/fa.pak</tspan>
+
+<tspan x="10" y="4170">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4186">dist/locales/fil.pak</tspan>
+
+<tspan x="10" y="4202">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4218">dist/locales/fi.pak</tspan>
+
+<tspan x="10" y="4234">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4250">dist/locales/fr.pak</tspan>
+
+<tspan x="10" y="4266">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4282">dist/locales/gu.pak</tspan>
+
+<tspan x="10" y="4298">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4314">dist/locales/he.pak</tspan>
+
+<tspan x="10" y="4330">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4346">dist/locales/hi.pak</tspan>
+
+<tspan x="10" y="4362">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4378">dist/locales/hr.pak</tspan>
+
+<tspan x="10" y="4394">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4410">dist/locales/hu.pak</tspan>
+
+<tspan x="10" y="4426">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4442">dist/locales/id.pak</tspan>
+
+<tspan x="10" y="4458">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4474">dist/locales/it.pak</tspan>
+
+<tspan x="10" y="4490">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4506">dist/locales/ja.pak</tspan>
+
+<tspan x="10" y="4522">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4538">dist/locales/kn.pak</tspan>
+
+<tspan x="10" y="4554">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4570">dist/locales/ko.pak</tspan>
+
+<tspan x="10" y="4586">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4602">dist/locales/lt.pak</tspan>
+
+<tspan x="10" y="4618">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4634">dist/locales/lv.pak</tspan>
+
+<tspan x="10" y="4650">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4666">dist/locales/ml.pak</tspan>
+
+<tspan x="10" y="4682">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4698">dist/locales/mr.pak</tspan>
+
+<tspan x="10" y="4714">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4730">dist/locales/ms.pak</tspan>
+
+<tspan x="10" y="4746">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4762">dist/locales/nb.pak</tspan>
+
+<tspan x="10" y="4778">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4794">dist/locales/nl.pak</tspan>
+
+<tspan x="10" y="4810">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4826">dist/locales/pl.pak</tspan>
+
+<tspan x="10" y="4842">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4858">dist/locales/pt-BR.pak</tspan>
+
+<tspan x="10" y="4874">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4890">dist/locales/pt-PT.pak</tspan>
+
+<tspan x="10" y="4906">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4922">dist/locales/ro.pak</tspan>
+
+<tspan x="10" y="4938">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4954">dist/locales/ru.pak</tspan>
+
+<tspan x="10" y="4970">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="4986">dist/locales/sk.pak</tspan>
+
+<tspan x="10" y="5002">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="5018">dist/locales/sl.pak</tspan>
+
+<tspan x="10" y="5034">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="5050">dist/locales/sr.pak</tspan>
+
+<tspan x="10" y="5066">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="5082">dist/locales/sv.pak</tspan>
+
+<tspan x="10" y="5098">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="5114">dist/locales/sw.pak</tspan>
+
+<tspan x="10" y="5130">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="5146">dist/locales/ta.pak</tspan>
+
+<tspan x="10" y="5162">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="5178">dist/locales/te.pak</tspan>
+
+<tspan x="10" y="5194">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="5210">dist/locales/th.pak</tspan>
+
+<tspan x="10" y="5226">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="5242">dist/locales/tr.pak</tspan>
+
+<tspan x="10" y="5258">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="5274">dist/locales/uk.pak</tspan>
+
+<tspan x="10" y="5290">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="5306">dist/locales/vi.pak</tspan>
+
+<tspan x="10" y="5322">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="5338">dist/locales/zh-CN.pak</tspan>
+
+<tspan x="10" y="5354">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="5370">dist/locales/zh-TW.pak</tspan>
+
+<tspan x="10" y="5386">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="5402">dist/resources/default_app.asar</tspan>
+
+<tspan x="10" y="5418">apidocCreate - readExample /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron/\</tspan>
+<tspan x="10" y="5434">dist/resources/electron.asar</tspan>
+
+<tspan x="10" y="5450">apidocCreate - requiring /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron ..\</tspan>
+<tspan x="10" y="5466">.</tspan>
+
+<tspan x="10" y="5482">apidocCreate - ... required /home/travis/build/npmdoc/node-npmdoc-electron/node_modules/electron</tspan>
+
+<tspan x="10" y="5498">apidocCreate - libFile cli.js</tspan>
+
+<tspan x="10" y="5514">apidocCreate - libFile install.js</tspan>
+
+<tspan x="10" y="5530">created customOrg file /home/travis/build/npmdoc/node-npmdoc-electron/README.md</tspan>
+
+<tspan x="10" y="5546"></tspan>
+
+<tspan x="10" y="5562">(node:6023) DeprecationWarning: _linklist module is deprecated. Please use a userland alternativ\</tspan>
+<tspan x="10" y="5578">e.</tspan>
+
+<tspan x="10" y="5594">(node:6023) DeprecationWarning: sys is deprecated. Use util instead.</tspan>
+
+<tspan x="10" y="5610">&gt; server listening on http-port 36102</tspan>
+
+<tspan x="10" y="5626">[node test-case 1 of 1 passed] - testCase_buildApp_default</tspan>
+
+<tspan x="10" y="5642"></tspan>
+
+<tspan x="10" y="5658">buildApp - merged test-report from file /home/travis/build/npmdoc/node-npmdoc-electron/tmp/build\</tspan>
+<tspan x="10" y="5674">/test-report.json</tspan>
+
+<tspan x="10" y="5690"></tspan>
+
+<tspan x="10" y="5706">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="5722">| test-report - buildApidoc - node - linux v6.14.2 - 2018-06-04T08:13:08.450Z</tspan>
+
+<tspan x="10" y="5738">|   44637 ms            0 failed        1 passed      |</tspan>
+
+<tspan x="10" y="5754">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="5770">| test-report - buildApp - node - linux v6.14.2 - 2018-06-04T08:12:28.880Z</tspan>
+
+<tspan x="10" y="5786">|   36479 ms            0 failed        8 passed      |</tspan>
+
+<tspan x="10" y="5802">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="5818">| test-report - npmTest - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTM\</tspan>
+<tspan x="10" y="5834">L, like Gecko) Chrome/61.0.3163.100 Electron/2.0.2 Safari/537.36 - 2018-06-04T08:12:50.747Z</tspan>
+
+<tspan x="10" y="5850">|      60 ms            0 failed        8 passed      |</tspan>
+
+<tspan x="10" y="5866">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="5882"></tspan>
+
+<tspan x="10" y="5898">created test-report file /home/travis/build/npmdoc/node-npmdoc-electron/tmp/build/test-report.ht\</tspan>
+<tspan x="10" y="5914">ml</tspan>
+
+<tspan x="10" y="5930"></tspan>
+
+<tspan x="10" y="5946"></tspan>
+
+<tspan x="10" y="5962">buildApp - 0 failed tests</tspan>
+
+<tspan x="10" y="5978"></tspan>
+
+<tspan x="10" y="5994"></tspan>
+
+<tspan x="10" y="6010">[MODE_BUILD=buildApp] - 2018-06-04T08:13:54.622Z - EXIT_CODE - 0</tspan>
+
+</text>
+</svg>
